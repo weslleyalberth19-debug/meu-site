@@ -3,76 +3,286 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Meu Primeiro Site</title>
+    <title>Web Player Xtream</title>
+    <!-- Hls.js para compatibilidade de stream -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            color: #ffffff;
+            background: #090d16;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        /* Tela de Login */
+        #loginScreen {
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            text-align: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
         }
-        .card {
+        .login-card {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            padding: 40px 25px;
-            max-width: 340px;
-            width: 85%;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            padding: 30px;
+            border-radius: 16px;
+            width: 320px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        h1 {
-            margin-top: 0;
-            font-size: 26px;
-            color: #38bdf8;
+        .login-card h2 { margin-top: 0; color: #38bdf8; text-align: center; }
+        .login-card input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: #1e293b;
+            border: 1px solid #334155;
+            color: #fff;
+            border-radius: 8px;
+            box-sizing: border-box;
         }
-        p {
-            color: #cbd5e1;
-            line-height: 1.5;
-            font-size: 15px;
-        }
-        button {
-            margin-top: 20px;
+        .login-card button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
             background: #38bdf8;
             color: #0f172a;
             border: none;
-            padding: 12px 24px;
-            font-size: 16px;
             font-weight: bold;
-            border-radius: 10px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: transform 0.1s;
         }
-        button:active {
-            transform: scale(0.95);
+        /* Dashboard do Player */
+        #appScreen {
+            display: none;
+            flex-direction: row;
+            height: 100vh;
         }
-        #mensagem {
-            margin-top: 15px;
+        .sidebar {
+            width: 320px;
+            background: #111827;
+            border-right: 1px solid #1f2937;
+            display: flex;
+            flex-direction: column;
+        }
+        .sidebar-header {
+            padding: 15px;
+            background: #1f2937;
             font-weight: bold;
-            color: #4ade80;
-            min-height: 20px;
+            color: #38bdf8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .channels-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .channel-item {
+            padding: 10px;
+            margin-bottom: 6px;
+            background: #1f2937;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .channel-item:hover, .channel-item.active {
+            background: #374151;
+            border-left: 4px solid #38bdf8;
+        }
+        .player-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #030712;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            max-height: 75vh;
+            background: #000;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+        }
+        .now-playing {
+            margin-top: 15px;
+            font-size: 16px;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+        .error-msg {
+            color: #f87171;
+            font-size: 12px;
+            text-align: center;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Site Online! 🚀</h1>
-        <p>Hospedado gratuitamente no GitHub Pages direto pelo celular.</p>
-        <button onclick="testar()">Testar Botão</button>
-        <div id="mensagem"></div>
+    <!-- TELA DE LOGIN XTREAM -->
+    <div id="loginScreen">
+        <div class="login-card">
+            <h2>Xtream Web</h2>
+            <input type="text" id="serverUrl" placeholder="URL (ex: http://servidor.com:8080)" />
+            <input type="text" id="username" placeholder="Usuário" />
+            <input type="password" id="password" placeholder="Senha" />
+            <button onclick="conectarXtream()">Entrar</button>
+            <div id="errorMsg" class="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- TELA DO PLAYER E CANAIS -->
+    <div id="appScreen">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <span>Canais Ao Vivo</span>
+                <button onclick="sair()" style="padding: 4px 8px; font-size: 11px; background: #ef4444; color:#fff; border:none; border-radius:4px; cursor:pointer;">Sair</button>
+            </div>
+            <div class="channels-list" id="channelsList">
+                <div style="color: #6b7280; text-align:center; margin-top:20px;">Carregando canais...</div>
+            </div>
+        </div>
+        <div class="player-area">
+            <video id="videoPlayer" controls autoplay></video>
+            <div class="now-playing" id="nowPlaying">Selecione um canal</div>
+        </div>
     </div>
 
     <script>
-        function testar() {
-            document.getElementById('mensagem').innerText = 'Funcionando perfeitamente!';
+        let serverData = {};
+        let hlsInstance = null;
+
+        async function conectarXtream() {
+            let url = document.getElementById('serverUrl').value.trim();
+            let user = document.getElementById('username').value.trim();
+            let pass = document.getElementById('password').value.trim();
+            let errorDiv = document.getElementById('errorMsg');
+
+            errorDiv.innerText = '';
+
+            if (!url || !user || !pass) {
+                errorDiv.innerText = 'Preencha todos os campos!';
+                return;
+            }
+
+            // Remove barra no final da URL se houver
+            if (url.endsWith('/')) {
+                url = url.slice(0, -1);
+            }
+
+            serverData = { url, user, pass };
+
+            // URL de autenticação/player da API Xtream Codes
+            let apiAuthUrl = `${url}/player_api.php?username=${user}&password=${pass}`;
+
+            try {
+                let response = await fetch(apiAuthUrl);
+                let data = await response.json();
+
+                if (data.user_info && data.user_info.auth === 1) {
+                    // Login bem sucedido, esconde login e carrega canais ao vivo
+                    document.getElementById('loginScreen').style.display = 'none';
+                    document.getElementById('appScreen').style.display = 'flex';
+                    carregarCanaisAoVivo();
+                } else {
+                    errorDiv.innerText = 'Usuário ou senha inválidos!';
+                }
+            } catch (e) {
+                // Nota sobre CORS: Se o servidor bloquear requisições diretas via browser, avisamos
+                errorDiv.innerText = 'Erro ao conectar. Verifique a URL ou bloqueio CORS do painel.';
+                console.error(e);
+            }
+        }
+
+        async function carregarCanaisAoVivo() {
+            let { url, user, pass } = serverData;
+            let listUrl = `${url}/player_api.php?username=${user}&password=${pass}&action=get_live_streams`;
+
+            try {
+                let response = await fetch(listUrl);
+                let streams = await response.json();
+                let container = document.getElementById('channelsList');
+                container.innerHTML = '';
+
+                if (!Array.isArray(streams) || streams.length === 0) {
+                    container.innerHTML = '<div style="color: #f87171; text-align:center;">Nenhum canal encontrado.</div>';
+                    return;
+                }
+
+                streams.forEach(stream => {
+                    let streamId = stream.stream_id;
+                    let streamName = stream.name;
+                    // Monta o link padrão de stream ao vivo do Xtream (geralmente formato .ts ou m3u8)
+                    let streamUrl = `${url}/live/${user}/${pass}/${streamId}.m3u8`;
+
+                    let div = document.createElement('div');
+                    div.className = 'channel-item';
+                    div.innerText = streamName;
+                    div.onclick = () => {
+                        document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+                        div.classList.add('active');
+                        tocarCanal(streamUrl, streamName);
+                    };
+                    container.appendChild(div);
+                });
+
+            } catch (e) {
+                console.error('Erro ao buscar canais:', e);
+            }
+        }
+
+        function tocarCanal(url, nome) {
+            const video = document.getElementById('videoPlayer');
+            document.getElementById('nowPlaying').innerText = `Reproduzindo: ${nome}`;
+
+            if (hlsInstance) {
+                hlsInstance.destroy();
+            }
+
+            if (Hls.isSupported()) {
+                hlsInstance = new Hls();
+                hlsInstance.loadSource(url);
+                hlsInstance.attachMedia(video);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play().catch(e => console.log("Erro no play automático:", e));
+                });
+                hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        console.warn('Tentando fallback para stream nativo/ts...');
+                        video.src = url;
+                        video.play().catch(err => console.log(err));
+                    }
+                });
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Suporte nativo (ótimo para Safari no iPhone)
+                video.src = url;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play().catch(e => console.log(e));
+                });
+            } else {
+                // Fallback final se o navegador precisar direto da URL base
+                video.src = url;
+                video.play();
+            }
+        }
+
+        function sair() {
+            document.getElementById('appScreen').style.display = 'none';
+            document.getElementById('loginScreen').style.display = 'flex';
+            if (hlsInstance) hlsInstance.destroy();
+            document.getElementById('videoPlayer').pause();
         }
     </script>
-
 </body>
 </html>
+
