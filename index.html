@@ -3,63 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Player3 Xtream</title>
+    <title>Player IPTV - Esportes</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
+        * { box-sizing: border-box; }
         body {
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background: #090d16;
             color: #fff;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
         }
-        #loginScreen {
+        .app-container {
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex: 1;
             height: 100vh;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-        }
-        .login-card {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 16px;
-            width: 320px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .login-card h2 { margin-top: 0; color: #38bdf8; text-align: center; }
-        .login-card input {
-            width: 100%;
-            padding: 12px;
-            margin: 8px 0;
-            background: #1e293b;
-            border: 1px solid #334155;
-            color: #fff;
-            border-radius: 8px;
-            box-sizing: border-box;
-        }
-        .login-card button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 15px;
-            background: #38bdf8;
-            color: #0f172a;
-            border: none;
-            font-weight: bold;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        #appScreen {
-            display: none;
-            flex-direction: row;
-            height: 100vh;
+            overflow: hidden;
         }
         .sidebar {
-            width: 320px;
+            width: 350px;
             background: #111827;
             border-right: 1px solid #1f2937;
             display: flex;
@@ -68,11 +33,31 @@
         .sidebar-header {
             padding: 15px;
             background: #1f2937;
+            border-bottom: 1px solid #374151;
+        }
+        .sidebar-title {
             font-weight: bold;
             color: #38bdf8;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .filter-box {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 8px;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #374151;
+            background: #0f172a;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+        }
+        select:focus, input:focus {
+            border-color: #38bdf8;
         }
         .channels-list {
             flex: 1;
@@ -80,19 +65,44 @@
             padding: 10px;
         }
         .channel-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             padding: 10px;
             margin-bottom: 6px;
             background: #1f2937;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
+            transition: background 0.2s;
+        }
+        .channel-item:hover, .channel-item.active {
+            background: #374151;
+            border-left: 4px solid #38bdf8;
+        }
+        .channel-logo {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+            background: #0f172a;
+            border-radius: 6px;
+            padding: 2px;
+            flex-shrink: 0;
+        }
+        .channel-info {
+            overflow: hidden;
+            flex: 1;
+        }
+        .channel-name {
+            font-weight: 500;
             font-size: 14px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .channel-item:hover, .channel-item.active {
-            background: #374151;
-            border-left: 4px solid #38bdf8;
+        .channel-group {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
         }
         .player-area {
             flex: 1;
@@ -113,167 +123,194 @@
         .now-playing {
             margin-top: 15px;
             font-size: 16px;
-            color: #94a3b8;
+            color: #38bdf8;
             font-weight: 500;
-        }
-        .error-msg {
-            color: #f87171;
-            font-size: 12px;
             text-align: center;
-            margin-top: 10px;
+        }
+        .status-msg {
+            color: #94a3b8;
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column-reverse;
+            }
+            .sidebar {
+                width: 100%;
+                height: 55vh;
+                border-right: none;
+                border-top: 1px solid #1f2937;
+            }
+            .player-area {
+                height: 45vh;
+                padding: 10px;
+            }
+            video {
+                max-height: 32vh;
+            }
         }
     </style>
 </head>
 <body>
 
-    <div id="loginScreen">
-        <div class="login-card">
-            <h2>Xtream Web</h2>
-            <input type="text" id="serverUrl" placeholder="URL (ex: http://servidor.com:8080)" />
-            <input type="text" id="username" placeholder="Usuário" />
-            <input type="password" id="password" placeholder="Senha" />
-            <button onclick="conectarXtream()">Entrar</button>
-            <div id="errorMsg" class="error-msg"></div>
-        </div>
-    </div>
-
-    <div id="appScreen">
+    <div class="app-container">
         <div class="sidebar">
             <div class="sidebar-header">
-                <span>Canais Ao Vivo</span>
-                <button onclick="sair()" style="padding: 4px 8px; font-size: 11px; background: #ef4444; color:#fff; border:none; border-radius:4px; cursor:pointer;">Sair</button>
+                <div class="sidebar-title">⚽ Canais de Esportes (<span id="count">0</span>)</div>
+                <div class="filter-box">
+                    <select id="categorySelect" onchange="filtrarCanais()">
+                        <option value="TODOS">Todas as Categorias</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="Buscar canal (ex: SporTV, ESPN)..." oninput="filtrarCanais()">
+                </div>
             </div>
             <div class="channels-list" id="channelsList">
-                <div style="color: #6b7280; text-align:center; margin-top:20px;">Carregando canais...</div>
+                <div class="status-msg">Carregando lista...</div>
             </div>
         </div>
+
         <div class="player-area">
-            <video id="videoPlayer" controls autoplay></video>
-            <div class="now-playing" id="nowPlaying">Selecione um canal</div>
+            <video id="videoPlayer" controls playsinline autoplay></video>
+            <div class="now-playing" id="nowPlaying">Selecione um canal para assistir</div>
         </div>
     </div>
 
     <script>
-        let serverData = {};
+        let todosCanais = [];
         let hlsInstance = null;
 
-        async function conectarXtream() {
-            let url = document.getElementById('serverUrl').value.trim();
-            let user = document.getElementById('username').value.trim();
-            let pass = document.getElementById('password').value.trim();
-            let errorDiv = document.getElementById('errorMsg');
+        async function carregarCanais() {
+            try {
+                const response = await fetch('canais.json');
+                todosCanais = await response.json();
+                
+                preencherCategorias();
+                renderizarLista(todosCanais);
 
-            errorDiv.innerText = '';
+                if (todosCanais.length > 0) {
+                    tocarCanal(todosCanais[0].url, todosCanais[0].name);
+                    const primeiroItem = document.querySelector('.channel-item');
+                    if (primeiroItem) primeiroItem.classList.add('active');
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('channelsList').innerHTML = 
+                    '<div class="status-msg" style="color:#f87171;">Erro ao carregar canais.json. Verifique se o arquivo está na mesma pasta do index.html no GitHub.</div>';
+            }
+        }
 
-            if (!url || !user || !pass) {
-                errorDiv.innerText = 'Preencha todos os campos!';
+        function preencherCategorias() {
+            const select = document.getElementById('categorySelect');
+            const grupos = [...new Set(todosCanais.map(c => c.group))];
+            
+            grupos.forEach(grupo => {
+                const opt = document.createElement('option');
+                opt.value = grupo;
+                opt.textContent = grupo;
+                select.appendChild(opt);
+            });
+        }
+
+        function filtrarCanais() {
+            const categoria = document.getElementById('categorySelect').value;
+            const termo = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtrados = todosCanais.filter(canal => {
+                const bateCategoria = (categoria === 'TODOS') || (canal.group === categoria);
+                const bateTexto = canal.name.toLowerCase().includes(termo);
+                return bateCategoria && bateTexto;
+            });
+
+            renderizarLista(filtrados);
+        }
+
+        function renderizarLista(lista) {
+            const container = document.getElementById('channelsList');
+            document.getElementById('count').innerText = lista.length;
+            container.innerHTML = '';
+
+            if (lista.length === 0) {
+                container.innerHTML = '<div class="status-msg">Nenhum canal encontrado.</div>';
                 return;
             }
 
-            if (url.endsWith('/')) {
-                url = url.slice(0, -1);
-            }
+            lista.forEach(canal => {
+                const div = document.createElement('div');
+                div.className = 'channel-item';
+                
+                const logoHtml = canal.logo 
+                    ? `<img class="channel-logo" src="${canal.logo}" onerror="this.style.display='none'">` 
+                    : '';
 
-            serverData = { url, user, pass };
+                div.innerHTML = `
+                    ${logoHtml}
+                    <div class="channel-info">
+                        <div class="channel-name">${canal.name}</div>
+                        <div class="channel-group">${canal.group}</div>
+                    </div>
+                `;
 
-            // Usando outro proxy alternativo mais robusto (allorigins) se o anterior falhou
-            let targetUrl = `${url}/player_api.php?username=${user}&password=${pass}`;
-            let proxyUrl = `https://api.allorigins.win/get?url=` + encodeURIComponent(targetUrl);
+                div.onclick = () => {
+                    document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
+                    div.classList.add('active');
+                    tocarCanal(canal.url, canal.name);
+                };
 
-            try {
-                let response = await fetch(proxyUrl);
-                let wrapper = await response.json();
-                let data = JSON.parse(wrapper.contents);
-
-                if (data.user_info && data.user_info.auth === 1) {
-                    document.getElementById('loginScreen').style.display = 'none';
-                    document.getElementById('appScreen').style.display = 'flex';
-                    carregarCanaisAoVivo();
-                } else {
-                    errorDiv.innerText = 'Usuário ou senha inválidos!';
-                }
-            } catch (e) {
-                errorDiv.innerText = 'Erro de CORS/Conexão com o painel.';
-                console.error(e);
-            }
+                container.appendChild(div);
+            });
         }
 
-        async function carregarCanaisAoVivo() {
-            let { url, user, pass } = serverData;
-            let targetUrl = `${url}/player_api.php?username=${user}&password=${pass}&action=get_live_streams`;
-            let proxyUrl = `https://api.allorigins.win/get?url=` + encodeURIComponent(targetUrl);
-
-            try {
-                let response = await fetch(proxyUrl);
-                let wrapper = await response.json();
-                let streams = JSON.parse(wrapper.contents);
-                let container = document.getElementById('channelsList');
-                container.innerHTML = '';
-
-                if (!Array.isArray(streams) || streams.length === 0) {
-                    container.innerHTML = '<div style="color: #f87171; text-align:center;">Nenhum canal encontrado.</div>';
-                    return;
+        // Converte link Xtream bruto (http://host:80/user/pass/id) para formato HLS (.m3u8)
+        function formatarUrlHls(url) {
+            if (!url.endsWith('.m3u8') && !url.endsWith('.ts')) {
+                const partes = url.split('/');
+                if (partes.length >= 6) {
+                    const id = partes.pop();
+                    const pass = partes.pop();
+                    const user = partes.pop();
+                    const base = partes.join('/');
+                    return `${base}/live/${user}/${pass}/${id}.m3u8`;
                 }
-
-                streams.forEach(stream => {
-                    let streamId = stream.stream_id;
-                    let streamName = stream.name;
-                    let streamUrl = `${url}/live/${user}/${pass}/${streamId}.m3u8`;
-
-                    let div = document.createElement('div');
-                    div.className = 'channel-item';
-                    div.innerText = streamName;
-                    div.onclick = () => {
-                        document.querySelectorAll('.channel-item').forEach(el => el.classList.remove('active'));
-                        div.classList.add('active');
-                        tocarCanal(streamUrl, streamName);
-                    };
-                    container.appendChild(div);
-                });
-
-            } catch (e) {
-                console.error('Erro ao buscar canais:', e);
             }
+            return url;
         }
 
-        function tocarCanal(url, nome) {
+        function tocarCanal(urlOriginal, nome) {
             const video = document.getElementById('videoPlayer');
+            const urlHls = formatarUrlHls(urlOriginal);
             document.getElementById('nowPlaying').innerText = `Reproduzindo: ${nome}`;
 
             if (hlsInstance) {
                 hlsInstance.destroy();
             }
 
-            if (Hls.isSupported()) {
+            if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Player nativo do iPhone / Safari
+                video.src = urlHls;
+                video.play().catch(() => {});
+            } else if (Hls.isSupported()) {
                 hlsInstance = new Hls();
-                hlsInstance.loadSource(url);
+                hlsInstance.loadSource(urlHls);
                 hlsInstance.attachMedia(video);
-                hlsInstance.on(Hls.Events.MANIFEST_PARSED, function() {
-                    video.play().catch(e => console.log("Erro no play automático:", e));
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play().catch(() => {});
                 });
-                hlsInstance.on(Hls.Events.ERROR, function(event, data) {
+                hlsInstance.on(Hls.Events.ERROR, (event, data) => {
                     if (data.fatal) {
-                        video.src = url;
-                        video.play().catch(err => console.log(err));
+                        video.src = urlOriginal;
+                        video.play().catch(() => {});
                     }
                 });
-            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = url;
-                video.addEventListener('loadedmetadata', function() {
-                    video.play().catch(e => console.log(e));
-                });
             } else {
-                video.src = url;
-                video.play();
+                video.src = urlOriginal;
+                video.play().catch(() => {});
             }
         }
 
-        function sair() {
-            document.getElementById('appScreen').style.display = 'none';
-            document.getElementById('loginScreen').style.display = 'flex';
-            if (hlsInstance) hlsInstance.destroy();
-            document.getElementById('videoPlayer').pause();
-        }
+        carregarCanais();
     </script>
 </body>
 </html>
