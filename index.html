@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Player Xtream</title>
-    <!-- Hls.js para compatibilidade de stream -->
+    <title>Web Player3 Xtream</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         body {
@@ -17,7 +16,6 @@
             flex-direction: column;
             height: 100vh;
         }
-        /* Tela de Login */
         #loginScreen {
             display: flex;
             justify-content: center;
@@ -55,7 +53,6 @@
             border-radius: 8px;
             cursor: pointer;
         }
-        /* Dashboard do Player */
         #appScreen {
             display: none;
             flex-direction: row;
@@ -129,7 +126,6 @@
 </head>
 <body>
 
-    <!-- TELA DE LOGIN XTREAM -->
     <div id="loginScreen">
         <div class="login-card">
             <h2>Xtream Web</h2>
@@ -141,7 +137,6 @@
         </div>
     </div>
 
-    <!-- TELA DO PLAYER E CANAIS -->
     <div id="appScreen">
         <div class="sidebar">
             <div class="sidebar-header">
@@ -181,26 +176,24 @@
 
             serverData = { url, user, pass };
 
+            // Usando outro proxy alternativo mais robusto (allorigins) se o anterior falhou
             let targetUrl = `${url}/player_api.php?username=${user}&password=${pass}`;
-            let proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+            let proxyUrl = `https://api.allorigins.win/get?url=` + encodeURIComponent(targetUrl);
 
             try {
-                let response = await fetch(proxyUrl, {
-                    headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
-                    }
-                });
-                let data = await response.json();
+                let response = await fetch(proxyUrl);
+                let wrapper = await response.json();
+                let data = JSON.parse(wrapper.contents);
 
                 if (data.user_info && data.user_info.auth === 1) {
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('appScreen').style.display = 'flex';
                     carregarCanaisAoVivo();
                 } else {
-                    errorDiv.innerText = 'Usuário ou senha inválidos ou bloqueados pelo painel!';
+                    errorDiv.innerText = 'Usuário ou senha inválidos!';
                 }
             } catch (e) {
-                errorDiv.innerText = 'Erro ao conectar. Verifique os dados inseridos.';
+                errorDiv.innerText = 'Erro de CORS/Conexão com o painel.';
                 console.error(e);
             }
         }
@@ -208,11 +201,12 @@
         async function carregarCanaisAoVivo() {
             let { url, user, pass } = serverData;
             let targetUrl = `${url}/player_api.php?username=${user}&password=${pass}&action=get_live_streams`;
-            let proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
+            let proxyUrl = `https://api.allorigins.win/get?url=` + encodeURIComponent(targetUrl);
 
             try {
                 let response = await fetch(proxyUrl);
-                let streams = await response.json();
+                let wrapper = await response.json();
+                let streams = JSON.parse(wrapper.contents);
                 let container = document.getElementById('channelsList');
                 container.innerHTML = '';
 
@@ -259,7 +253,6 @@
                 });
                 hlsInstance.on(Hls.Events.ERROR, function(event, data) {
                     if (data.fatal) {
-                        console.warn('Tentando fallback para stream nativo...');
                         video.src = url;
                         video.play().catch(err => console.log(err));
                     }
