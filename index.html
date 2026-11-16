@@ -175,22 +175,21 @@
                 return;
             }
 
-            // Remove barra no final da URL se houver
             if (url.endsWith('/')) {
                 url = url.slice(0, -1);
             }
 
             serverData = { url, user, pass };
 
-            // URL de autenticação/player da API Xtream Codes
-            let apiAuthUrl = `${url}/player_api.php?username=${user}&password=${pass}`;
+            // Usando proxy CORS para contornar o bloqueio HTTP x HTTPS do GitHub Pages
+            let targetUrl = `${url}/player_api.php?username=${user}&password=${pass}`;
+            let proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
 
             try {
-                let response = await fetch(apiAuthUrl);
+                let response = await fetch(proxyUrl);
                 let data = await response.json();
 
                 if (data.user_info && data.user_info.auth === 1) {
-                    // Login bem sucedido, esconde login e carrega canais ao vivo
                     document.getElementById('loginScreen').style.display = 'none';
                     document.getElementById('appScreen').style.display = 'flex';
                     carregarCanaisAoVivo();
@@ -198,18 +197,18 @@
                     errorDiv.innerText = 'Usuário ou senha inválidos!';
                 }
             } catch (e) {
-                // Nota sobre CORS: Se o servidor bloquear requisições diretas via browser, avisamos
-                errorDiv.innerText = 'Erro ao conectar. Verifique a URL ou bloqueio CORS do painel.';
+                errorDiv.innerText = 'Erro ao conectar. Verifique os dados inseridos.';
                 console.error(e);
             }
         }
 
         async function carregarCanaisAoVivo() {
             let { url, user, pass } = serverData;
-            let listUrl = `${url}/player_api.php?username=${user}&password=${pass}&action=get_live_streams`;
+            let targetUrl = `${url}/player_api.php?username=${user}&password=${pass}&action=get_live_streams`;
+            let proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
 
             try {
-                let response = await fetch(listUrl);
+                let response = await fetch(proxyUrl);
                 let streams = await response.json();
                 let container = document.getElementById('channelsList');
                 container.innerHTML = '';
@@ -222,7 +221,6 @@
                 streams.forEach(stream => {
                     let streamId = stream.stream_id;
                     let streamName = stream.name;
-                    // Monta o link padrão de stream ao vivo do Xtream (geralmente formato .ts ou m3u8)
                     let streamUrl = `${url}/live/${user}/${pass}/${streamId}.m3u8`;
 
                     let div = document.createElement('div');
@@ -258,19 +256,17 @@
                 });
                 hlsInstance.on(Hls.Events.ERROR, function(event, data) {
                     if (data.fatal) {
-                        console.warn('Tentando fallback para stream nativo/ts...');
+                        console.warn('Tentando fallback para stream nativo...');
                         video.src = url;
                         video.play().catch(err => console.log(err));
                     }
                 });
             } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Suporte nativo (ótimo para Safari no iPhone)
                 video.src = url;
                 video.addEventListener('loadedmetadata', function() {
                     video.play().catch(e => console.log(e));
                 });
             } else {
-                // Fallback final se o navegador precisar direto da URL base
                 video.src = url;
                 video.play();
             }
@@ -285,4 +281,3 @@
     </script>
 </body>
 </html>
-
