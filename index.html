@@ -181,12 +181,15 @@
 
             serverData = { url, user, pass };
 
-            // Usando proxy CORS para contornar o bloqueio HTTP x HTTPS do GitHub Pages
             let targetUrl = `${url}/player_api.php?username=${user}&password=${pass}`;
             let proxyUrl = `https://corsproxy.io/?` + encodeURIComponent(targetUrl);
 
             try {
-                let response = await fetch(proxyUrl);
+                let response = await fetch(proxyUrl, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
+                    }
+                });
                 let data = await response.json();
 
                 if (data.user_info && data.user_info.auth === 1) {
@@ -194,7 +197,7 @@
                     document.getElementById('appScreen').style.display = 'flex';
                     carregarCanaisAoVivo();
                 } else {
-                    errorDiv.innerText = 'Usuário ou senha inválidos!';
+                    errorDiv.innerText = 'Usuário ou senha inválidos ou bloqueados pelo painel!';
                 }
             } catch (e) {
                 errorDiv.innerText = 'Erro ao conectar. Verifique os dados inseridos.';
