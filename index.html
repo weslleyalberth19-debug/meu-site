@@ -198,7 +198,7 @@
             } catch (e) {
                 console.error(e);
                 document.getElementById('channelsList').innerHTML = 
-                    '<div class="status-msg" style="color:#f87171;">Erro ao carregar canais.json. Verifique se o arquivo está na mesma pasta do index.html no GitHub.</div>';
+                    '<div class="status-msg" style="color:#f87171;">Erro ao carregar canais.json. Verifique se o arquivo está na mesma pasta.</div>';
             }
         }
 
@@ -263,17 +263,18 @@
             });
         }
 
-        // Converte link Xtream bruto (http://host:80/user/pass/id) para formato HLS (.m3u8)
+        // Converte o link para forçar o final .m3u8 para compatibilidade total com HLS no iOS
         function formatarUrlHls(url) {
-            if (!url.endsWith('.m3u8') && !url.endsWith('.ts')) {
-                const partes = url.split('/');
-                if (partes.length >= 6) {
-                    const id = partes.pop();
-                    const pass = partes.pop();
-                    const user = partes.pop();
-                    const base = partes.join('/');
-                    return `${base}/live/${user}/${pass}/${id}.m3u8`;
-                }
+            if (url.endsWith('.m3u8') || url.endsWith('.ts')) {
+                return url;
+            }
+            const partes = url.split('/');
+            if (partes.length >= 5) {
+                const id = partes.pop();
+                const pass = partes.pop();
+                const user = partes.pop();
+                const base = partes.join('/');
+                return `${base}/live/${user}/${pass}/${id}.m3u8`;
             }
             return url;
         }
@@ -288,7 +289,6 @@
             }
 
             if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                // Player nativo do iPhone / Safari
                 video.src = urlHls;
                 video.play().catch(() => {});
             } else if (Hls.isSupported()) {
