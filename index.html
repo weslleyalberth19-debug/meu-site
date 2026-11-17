@@ -11,7 +11,7 @@
             --surface-hover: #1e1e1e;
             --text-primary: #f5f5f7;
             --text-secondary: #86868b;
-            --accent: #ffffff;
+            --accent: #0a84ff;
             --radius: 12px;
         }
 
@@ -54,7 +54,7 @@
         .movies-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 16px;
+            gap: 20px;
         }
         @media (min-width: 768px) {
             .movies-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 24px; }
@@ -62,12 +62,9 @@
 
         .movie-card {
             background: transparent;
-            cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
-            text-decoration: none;
-            display: block;
+            display: flex;
+            flex-direction: column;
         }
-        .movie-card:active { transform: scale(0.96); }
 
         .poster-wrapper {
             width: 100%;
@@ -78,11 +75,6 @@
             position: relative;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             border: 0.5px solid rgba(255, 255, 255, 0.1);
-            transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        .movie-card:hover .poster-wrapper {
-            border-color: rgba(255, 255, 255, 0.4);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.8);
         }
 
         .movie-poster {
@@ -94,6 +86,9 @@
         .movie-details {
             margin-top: 8px;
             padding: 0 2px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         .movie-name {
             font-size: 13px;
@@ -111,6 +106,26 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        /* Botão Elegante para o VLC */
+        .vlc-btn {
+            margin-top: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background 0.2s ease, transform 0.1s ease;
+        }
+        .vlc-btn:active {
+            transform: scale(0.96);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .status-message {
@@ -163,13 +178,13 @@
             }
 
             filmes.forEach(filme => {
-                const card = document.createElement('a');
+                const card = document.createElement('div');
                 card.className = 'movie-card';
-                // Usando target="_blank" e rel="noopener" para abrir o link de vídeo fluido no player nativo do iOS
-                card.href = filme.url;
-                card.target = "_blank";
-                card.rel = "noopener";
                 
+                // Converte o link http para o esquema de abertura automática do VLC no iOS
+                // O VLC reconhece "vlc-x-callback://x-callback-url/stream?url=SEU_LINK" ou "vlc://SEU_LINK"
+                const vlcLink = `vlc://${filme.url}`;
+
                 card.innerHTML = `
                     <div class="poster-wrapper">
                         <img class="movie-poster" src="${filme.capa}" alt="${filme.titulo}" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500'">
@@ -177,6 +192,7 @@
                     <div class="movie-details">
                         <div class="movie-name">${filme.titulo}</div>
                         <div class="movie-category">${filme.categoria || 'Filme'}</div>
+                        <a href="${vlcLink}" class="vlc-btn">▶ Abrir no VLC</a>
                     </div>
                 `;
 
