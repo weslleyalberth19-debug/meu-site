@@ -7,12 +7,13 @@
     <style>
         :root {
             --bg-color: #000000;
-            --surface-color: #121212;
-            --surface-hover: #1e1e1e;
+            --surface-color: #161617;
+            --surface-hover: #2c2c2e;
             --text-primary: #f5f5f7;
             --text-secondary: #86868b;
             --accent: #0a84ff;
             --radius: 12px;
+            --modal-bg: rgba(28, 28, 30, 0.85);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
@@ -120,13 +121,91 @@
             font-weight: 500;
             cursor: pointer;
             text-align: center;
-            text-decoration: none;
             transition: background 0.2s ease, transform 0.1s ease;
         }
         .vlc-btn:active {
             transform: scale(0.96);
             background: rgba(255, 255, 255, 0.2);
         }
+
+        /* Modal Sofisticado Estilo Apple */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: var(--modal-bg);
+            border: 0.5px solid rgba(255, 255, 255, 0.15);
+            width: 85%;
+            max-width: 320px;
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+        .modal-icon {
+            font-size: 38px;
+            margin-bottom: 12px;
+        }
+        .modal-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -0.3px;
+        }
+        .modal-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+            margin-bottom: 20px;
+        }
+        .modal-btn-primary {
+            display: block;
+            width: 100%;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            margin-bottom: 8px;
+            transition: opacity 0.2s;
+        }
+        .modal-btn-primary:active { opacity: 0.8; }
+        .modal-btn-secondary {
+            display: block;
+            width: 100%;
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .modal-btn-secondary:active { color: #fff; }
 
         .status-message {
             grid-column: 1 / -1;
@@ -150,6 +229,17 @@
         <div class="section-title">Filmes em Destaque</div>
         <div class="movies-grid" id="moviesGrid">
             <div class="status-message">A carregar catálogo...</div>
+        </div>
+    </div>
+
+    <!-- Modal Sofisticado Alerta VLC Ausente -->
+    <div class="modal-overlay" id="vlcModal">
+        <div class="modal-card">
+            <div class="modal-icon">📲</div>
+            <div class="modal-title">VLC não encontrado</div>
+            <div class="modal-desc">Para reproduzir este filme com segurança e evitar bloqueios, instale o aplicativo VLC no seu dispositivo.</div>
+            <a href="https://apps.apple.com/app/vlc-media-player/id650377962" target="_blank" class="modal-btn-primary">Instalar na App Store</a>
+            <button class="modal-btn-secondary" onclick="fecharModal()">Agora não</button>
         </div>
     </div>
 
@@ -181,10 +271,6 @@
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 
-                // Converte o link http para o esquema de abertura automática do VLC no iOS
-                // O VLC reconhece "vlc-x-callback://x-callback-url/stream?url=SEU_LINK" ou "vlc://SEU_LINK"
-                const vlcLink = `vlc://${filme.url}`;
-
                 card.innerHTML = `
                     <div class="poster-wrapper">
                         <img class="movie-poster" src="${filme.capa}" alt="${filme.titulo}" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500'">
@@ -192,12 +278,35 @@
                     <div class="movie-details">
                         <div class="movie-name">${filme.titulo}</div>
                         <div class="movie-category">${filme.categoria || 'Filme'}</div>
-                        <a href="${vlcLink}" class="vlc-btn">▶ Abrir no VLC</a>
+                        <button class="vlc-btn" onclick="abrirVLC('${filme.url}')">▶ Assistir no VLC</button>
                     </div>
                 `;
 
                 grid.appendChild(card);
             });
+        }
+
+        function abrirVLC(urlFilme) {
+            const vlcUrl = `vlc-x-callback://x-callback-url/stream?url=${encodeURIComponent(urlFilme)}`;
+            
+            // Dispara a tentativa de abrir o VLC
+            window.location.href = vlcUrl;
+
+            // Temporizador inteligente: se em 1.5 segundo o navegador continuar focado, 
+            // significa que o VLC não abriu (não está instalado) e mostramos o pop-up sofisticado.
+            let timer = setTimeout(() => {
+                document.getElementById('vlcModal').classList.add('active');
+            }, 1500);
+
+            // Se o app abrir, a página perde o foco e cancelamos o popup
+            window.addEventListener('blur', function cancelTimer() {
+                clearTimeout(timer);
+                window.removeEventListener('blur', cancelTimer);
+            }, { once: true });
+        }
+
+        function fecharModal() {
+            document.getElementById('vlcModal').classList.remove('active');
         }
 
         function filtrarFilmes() {
