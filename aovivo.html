@@ -6,27 +6,29 @@
     <!-- Configurações PWA e Tela Inicial -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Futebol Live">
-    <title>Futebol Live - Canais ao Vivo</title>
+    <meta name="apple-mobile-web-app-title" content="Aovivo">
+    <title>Aovivo - Futebol Live</title>
     <style>
         :root {
             --bg-color: #000000;
             --surface-color: #161618;
-            --surface-hover: #2c2c2e;
-            --text-primary: #f5f5f7;
-            --text-secondary: #86868b;
-            --accent: #30d158; /* Verde Relvado / Transmissão Live */
-            --radius: 14px;
-            --modal-bg: rgba(28, 28, 30, 0.95);
+            --surface-hover: #222226;
+            --text-primary: #ffffff;
+            --text-secondary: #8e8e93;
+            --live-red: #ff3b30;
+            --live-red-glow: rgba(255, 59, 48, 0.4);
+            --radius-card: 16px;
+            --radius-pill: 12px;
+            --modal-bg: rgba(22, 22, 25, 0.92);
             --header-bg: rgba(0, 0, 0, 0.85);
-            --filter-bg: rgba(0, 0, 0, 0.5);
-            --banner-bg: rgba(28, 28, 30, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glass-hover: rgba(255, 255, 255, 0.25);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
-        body { background-color: var(--bg-color); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 30px; }
+        body { background-color: var(--bg-color); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 60px; }
 
-        /* Tela de Abertura (Splash Screen) */
+        /* Tela de Abertura */
         #splashScreen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -36,56 +38,38 @@
             align-items: center;
             justify-content: center;
             z-index: 999;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
-        #splashScreen.hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-        }
-        .splash-logo {
-            font-size: 34px;
-            font-weight: 700;
-            letter-spacing: -0.8px;
-            color: #fff;
-            margin-bottom: 12px;
-        }
-        .splash-logo span { color: var(--accent); }
-        .splash-spinner {
-            width: 24px;
-            height: 24px;
-            border: 2px solid rgba(48,209,88,0.2);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+        #splashScreen.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .splash-logo { font-size: 28px; font-weight: 800; letter-spacing: -0.6px; color: #fff; margin-bottom: 14px; text-transform: uppercase; }
+        .splash-logo span { color: var(--live-red); }
+        .splash-spinner { width: 24px; height: 24px; border: 2px solid rgba(255,59,48,0.2); border-top-color: var(--live-red); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Cabeçalho Apple TV */
+        /* Cabeçalho */
         header {
-            padding: 16px 20px;
+            padding: 18px 22px;
             background: var(--header-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             position: sticky;
             top: 0;
             z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 0.5px solid var(--border-glass);
         }
-        .brand { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; color: var(--text-primary); cursor: pointer; }
-        .brand span { color: var(--accent); }
+        .brand { font-size: 18px; font-weight: 800; letter-spacing: -0.5px; color: var(--text-primary); cursor: pointer; text-transform: uppercase; }
+        .brand span { color: var(--live-red); }
         
-        .header-actions { display: flex; align-items: center; gap: 8px; }
-        
+        .header-actions { display: flex; align-items: center; gap: 10px; }
         .btn-switch-universe {
             background: var(--surface-color);
-            border: 0.5px solid rgba(255, 255, 255, 0.15);
+            border: 0.5px solid var(--border-glass);
             color: var(--text-primary);
-            padding: 7px 12px;
-            border-radius: 16px;
+            padding: 8px 14px;
+            border-radius: var(--radius-pill);
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
@@ -93,35 +77,35 @@
             display: flex;
             align-items: center;
             white-space: nowrap;
-            transition: background 0.2s;
+            transition: background 0.2s, border-color 0.2s;
         }
-        .btn-switch-universe:hover { background: var(--surface-hover); }
+        .btn-switch-universe:hover { background: var(--surface-hover); border-color: var(--border-glass-hover); }
 
         .search-box {
             background: var(--surface-color);
-            border: 0.5px solid rgba(255, 255, 255, 0.15);
-            padding: 7px 14px;
-            border-radius: 16px;
+            border: 0.5px solid var(--border-glass);
+            padding: 8px 14px;
+            border-radius: var(--radius-pill);
             color: var(--text-primary);
             font-size: 13px;
             outline: none;
-            width: 130px;
-            transition: width 0.3s ease;
+            width: 125px;
+            transition: width 0.3s cubic-bezier(0.15, 0.85, 0.35, 1.2), border-color 0.2s;
         }
-        .search-box:focus { width: 180px; }
+        .search-box:focus { width: 180px; border-color: var(--live-red); }
 
-        /* Barra de Filtros e Ordenação */
+        /* Abas de Navegação */
         .filter-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--filter-bg);
-            border-bottom: 0.5px solid rgba(255, 255, 255, 0.08);
-            padding: 0 20px;
+            background: rgba(0,0,0,0.4);
+            border-bottom: 0.5px solid var(--border-glass);
+            padding: 0 22px;
         }
         .filter-tabs {
             display: flex;
-            gap: 8px;
+            gap: 10px;
             overflow-x: auto;
             padding: 14px 0;
             scrollbar-width: none;
@@ -129,246 +113,185 @@
         .filter-tabs::-webkit-scrollbar { display: none; }
         .tab-chip {
             background: var(--surface-color);
-            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            border: 0.5px solid var(--border-glass);
             color: var(--text-secondary);
-            padding: 6px 14px;
-            border-radius: 14px;
+            padding: 7px 16px;
+            border-radius: var(--radius-pill);
             font-size: 12px;
-            font-weight: 500;
-            letter-spacing: -0.2px;
+            font-weight: 600;
             white-space: nowrap;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
         }
         .tab-chip.active {
-            background: var(--accent);
+            background: #fff;
             color: #000;
             font-weight: 700;
-            border-color: var(--accent);
-            box-shadow: 0 4px 12px rgba(48,209,88,0.3);
-        }
-        .btn-sort {
-            background: var(--surface-color);
-            border: 0.5px solid rgba(255, 255, 255, 0.12);
-            color: var(--text-secondary);
-            padding: 6px 12px;
-            border-radius: 14px;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            white-space: nowrap;
-            margin-left: 10px;
+            border-color: #fff;
+            box-shadow: 0 4px 15px rgba(255,255,255,0.2);
         }
 
         /* Container Principal */
-        .container { padding: 40px 20px; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .container:not(:has(.empty-catalog-box)) { align-items: stretch; justify-content: flex-start; }
-        
-        /* Caixa de Aviso Elegante para Catálogo Vazio */
-        .empty-catalog-box {
-            background: var(--surface-color);
-            border: 0.5px solid rgba(48, 209, 88, 0.3);
-            border-radius: 20px;
-            padding: 36px 24px;
-            max-width: 420px;
-            text-align: center;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .empty-catalog-icon {
-            font-size: 32px;
-            color: var(--accent);
-            margin-bottom: 4px;
-        }
-        .empty-catalog-title {
-            font-size: 18px;
-            font-weight: 700;
-            color: var(--text-primary);
-            letter-spacing: -0.4px;
-        }
-        .empty-catalog-text {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            letter-spacing: -0.2px;
-        }
-        .empty-catalog-btn {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 10px;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(48,209,88,0.3);
-            display: inline-block;
-        }
+        .container { padding: 28px 22px; flex: 1; display: flex; flex-direction: column; gap: 34px; }
 
-        /* Seções de Categoria de Canais */
-        .category-section { width: 100%; margin-bottom: 32px; }
+        /* Secções */
+        .category-section { width: 100%; }
         .category-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
+            align-items: baseline;
+            margin-bottom: 14px;
         }
         .category-title {
             font-size: 18px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
+            font-weight: 800;
+            letter-spacing: -0.4px;
             color: var(--text-primary);
         }
         .btn-see-more {
             background: transparent;
             border: none;
-            color: var(--accent);
-            font-size: 13px;
-            font-weight: 500;
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 700;
             cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: color 0.2s;
         }
+        .btn-see-more:hover { color: #fff; }
 
-        .movies-carousel {
+        /* Carrossel de Canais */
+        .matches-carousel {
             display: flex;
             gap: 16px;
             overflow-x: auto;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             scrollbar-width: none;
             align-items: flex-start;
         }
-        .movies-carousel::-webkit-scrollbar { display: none; }
+        .matches-carousel::-webkit-scrollbar { display: none; }
 
-        /* Cards de Canais ao Vivo */
-        .movie-card {
+        /* Card de Canal */
+        .match-card {
             background: transparent;
             display: flex;
             flex-direction: column;
             cursor: pointer;
-            flex: 0 0 135px;
-            width: 135px;
+            flex: 0 0 160px;
+            width: 160px;
             transition: transform 0.25s cubic-bezier(0.15, 0.85, 0.35, 1.2);
         }
-        @media (min-width: 768px) {
-            .movie-card { flex: 0 0 160px; width: 160px; }
-        }
-        .movie-card:hover { transform: translateY(-4px); }
-        .movie-card:active { transform: scale(0.95); }
+        @media (min-width: 768px) { .match-card { flex: 0 0 190px; width: 190px; } }
+        .match-card:hover { transform: translateY(-4px); }
+        .match-card:active { transform: scale(0.96); }
 
         .poster-wrapper {
             width: 100%;
-            aspect-ratio: 16 / 10 !important; /* Formato horizontal ideal para logos de canais de TV */
-            border-radius: var(--radius);
+            aspect-ratio: 16 / 10 !important;
+            border-radius: var(--radius-card);
             overflow: hidden;
             background: var(--surface-color);
             position: relative;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-            border: 0.5px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            border: 0.5px solid var(--border-glass);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 10px;
+            padding: 14px;
+            transition: border-color 0.2s;
         }
+        .match-card:hover .poster-wrapper { border-color: var(--border-glass-hover); }
 
-        .movie-poster {
+        .match-logo {
             max-width: 100% !important;
             max-height: 100% !important;
             object-fit: contain !important;
+            position: absolute !important;
+            filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
         }
 
         .live-badge {
             position: absolute;
-            top: 8px;
-            left: 8px;
-            background: rgba(48, 209, 88, 0.85);
-            backdrop-filter: blur(8px);
-            color: #000;
+            top: 8px; left: 8px;
+            background: var(--live-red);
+            color: #fff;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 3px 7px;
+            border-radius: 6px;
+            z-index: 3;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            box-shadow: 0 2px 10px var(--live-red-glow);
+        }
+
+        .quality-badge {
+            position: absolute;
+            top: 8px; right: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            color: #fff;
             font-size: 8px;
             font-weight: 800;
             padding: 3px 6px;
             border-radius: 6px;
-            z-index: 2;
+            z-index: 3;
             letter-spacing: 0.5px;
-            text-transform: uppercase;
+            border: 0.5px solid rgba(255, 255, 255, 0.2);
         }
 
-        .movie-details {
-            margin-top: 8px;
-            padding: 0 2px;
-        }
-        .movie-name {
+        .match-details { margin-top: 10px; padding: 0 2px; }
+        .match-name {
             font-size: 13px;
-            font-weight: 500;
+            font-weight: 700;
             color: var(--text-primary);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             letter-spacing: -0.2px;
-            text-align: center;
+        }
+        .match-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            margin-top: 2px;
+            letter-spacing: 0.5px;
         }
 
-        /* Grelha perfeitamente centrada e simétrica */
-        .movies-grid-wrapper {
-            display: flex;
-            justify-content: center;
-            width: 100%;
-        }
-        .movies-grid {
+        /* Grelha para Listas */
+        .matches-grid-wrapper { display: flex; justify-content: center; width: 100%; }
+        .matches-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(135px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 18px;
             width: 100%;
-            justify-content: center;
-            align-items: start;
         }
-        @media (min-width: 768px) {
-            .movies-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        }
+        @media (min-width: 768px) { .matches-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 22px; } }
 
-        /* Barra Superior da Lista */
-        .list-header-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding: 0 4px;
-        }
-        .nav-back-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .list-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
         .btn-back {
             background: var(--surface-color);
-            border: 0.5px solid rgba(255, 255, 255, 0.15);
+            border: 0.5px solid var(--border-glass);
             color: var(--text-primary);
             padding: 8px 16px;
-            border-radius: 12px;
+            border-radius: var(--radius-pill);
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
         }
-        .btn-clear-history {
-            background: rgba(255, 69, 58, 0.15);
-            border: 0.5px solid rgba(255, 69, 58, 0.3);
-            color: #ff453a;
-            padding: 8px 14px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-        }
+        .btn-back:hover { background: var(--surface-hover); }
 
-        /* Janela de Detalhes (Modal) */
+        /* Modal */
         .detail-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.82);
-            backdrop-filter: blur(35px);
-            -webkit-backdrop-filter: blur(35px);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
             display: flex;
             align-items: flex-end;
             z-index: 200;
@@ -376,134 +299,44 @@
             pointer-events: none;
             transition: opacity 0.3s ease;
         }
-        @media (min-width: 768px) {
-            .detail-overlay { align-items: center; justify-content: center; }
-        }
-        .detail-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
+        @media (min-width: 768px) { .detail-overlay { align-items: center; justify-content: center; } }
+        .detail-overlay.active { opacity: 1; pointer-events: auto; }
         .detail-card {
             background: var(--modal-bg);
             border-top: 0.5px solid rgba(255, 255, 255, 0.2);
             width: 100%;
             max-height: 85vh;
-            border-radius: 24px 24px 0 0;
-            padding: 24px;
+            border-radius: 28px 28px 0 0;
+            padding: 32px 24px;
             overflow-y: auto;
-            box-shadow: 0 -15px 50px rgba(0,0,0,0.95);
+            box-shadow: 0 -25px 70px rgba(0,0,0,0.95);
             transform: translateY(100%);
             transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        @media (min-width: 768px) {
-            .detail-card {
-                width: 440px;
-                border-radius: 24px;
-                border: 0.5px solid rgba(255, 255, 255, 0.2);
-                transform: scale(0.92);
-            }
-        }
+        @media (min-width: 768px) { .detail-card { width: 440px; border-radius: 28px; transform: scale(0.92); } }
         .detail-overlay.active .detail-card { transform: translateY(0); }
-        @media (min-width: 768px) {
-            .detail-overlay.active .detail-card { transform: scale(1); }
-        }
+        @media (min-width: 768px) { .detail-overlay.active .detail-card { transform: scale(1); } }
 
-        .detail-header {
-            display: flex;
-            gap: 16px;
-            margin-bottom: 16px;
-            align-items: center;
-        }
-        .detail-poster {
-            width: 110px;
-            aspect-ratio: 16/10;
-            border-radius: 12px;
-            object-fit: contain;
-            background: var(--surface-color);
-            padding: 8px;
-            border: 0.5px solid rgba(255,255,255,0.2);
-        }
-        .detail-meta {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            flex: 1;
-        }
-        .detail-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-            line-height: 1.2;
-        }
-        .detail-category-tag {
-            font-size: 11px;
-            color: var(--accent);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            font-weight: 700;
-            margin-bottom: 6px;
-        }
+        .detail-header { display: flex; gap: 18px; margin-bottom: 22px; align-items: center; }
+        .detail-poster { width: 115px; aspect-ratio: 16/10; border-radius: 12px; object-fit: contain; background: var(--surface-color); padding: 12px; border: 0.5px solid var(--border-glass); }
+        .detail-meta { display: flex; flex-direction: column; justify-content: center; flex: 1; gap: 3px; }
+        .detail-title { font-size: 19px; font-weight: 800; color: var(--text-primary); letter-spacing: -0.3px; }
+        .detail-category-tag { font-size: 11px; color: var(--live-red); text-transform: uppercase; font-weight: 800; letter-spacing: 0.6px; }
         
-        .vlc-notice {
-            background: var(--surface-color);
-            border: 0.5px solid rgba(255, 255, 255, 0.1);
-            padding: 10px 14px;
-            border-radius: 12px;
-            font-size: 11px;
-            color: var(--text-secondary);
-            margin-bottom: 16px;
-            line-height: 1.4;
-        }
+        .vlc-notice { background: rgba(255,255,255,0.04); border: 0.5px solid var(--border-glass); padding: 14px 16px; border-radius: 14px; font-size: 12px; color: var(--text-secondary); margin-bottom: 22px; line-height: 1.45; }
+        .detail-actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn-play-vlc { background: #fff; color: #000; border: none; padding: 16px; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: center; text-decoration: none; display: block; text-transform: uppercase; letter-spacing: 0.6px; box-shadow: 0 4px 20px rgba(255,255,255,0.25); }
+        .btn-play-vlc:active { transform: scale(0.97); }
+        .btn-favorite-toggle { background: var(--surface-color); color: var(--text-primary); border: 0.5px solid var(--border-glass); padding: 13px; border-radius: 14px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
+        .btn-close-detail { background: transparent; color: var(--text-secondary); border: none; padding: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-align: center; }
 
-        .detail-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        
-        .btn-play-vlc {
-            background: var(--accent);
-            color: #000;
-            border: none;
-            padding: 13px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            text-align: center;
-            text-decoration: none;
-            display: block;
-            box-shadow: 0 4px 15px rgba(48,209,88,0.4);
-        }
-        .btn-favorite-toggle {
-            background: var(--surface-color);
-            color: var(--text-primary);
-            border: 0.5px solid rgba(255, 255, 255, 0.15);
-            padding: 11px;
-            border-radius: 12px;
-            font-size: 13px;
-            cursor: pointer;
-            text-align: center;
-        }
-        .btn-close-detail {
-            background: transparent;
-            color: var(--text-secondary);
-            border: none;
-            padding: 8px;
-            font-size: 13px;
-            cursor: pointer;
-            text-align: center;
-        }
-
-        .status-message {
-            text-align: center; color: var(--text-secondary); padding: 40px; font-size: 13px; width: 100%;
-        }
+        .empty-catalog-box { background: var(--surface-color); border: 0.5px solid var(--border-glass); border-radius: 20px; padding: 40px 24px; max-width: 400px; text-align: center; margin: 40px auto; box-shadow: 0 15px 40px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 12px; }
+        .status-message { text-align: center; color: var(--text-secondary); padding: 40px; font-size: 13px; width: 100%; }
     </style>
 </head>
 <body>
 
-    <!-- Tela de Abertura (Splash Screen) -->
+    <!-- Tela de Abertura -->
     <div id="splashScreen">
         <div class="splash-logo">Futebol<span>Live</span></div>
         <div class="splash-spinner"></div>
@@ -518,34 +351,33 @@
         </div>
     </header>
 
-    <!-- Barra de Abas e Ordenação A-Z -->
+    <!-- Abas -->
     <div class="filter-bar">
         <div class="filter-tabs" id="filterTabs">
-            <div class="tab-chip active" onclick="filtrarPorAba('Todos')">Todos</div>
-            <div class="tab-chip" onclick="filtrarPorAba('Favoritos')">Favoritos (0)</div>
+            <div class="tab-chip active" onclick="filtrarPorAba('Todos')">Início</div>
+            <div class="tab-chip" onclick="filtrarPorAba('Favoritos')">Favoritos (<span id="favCount">0</span>)</div>
             <div class="tab-chip" onclick="filtrarPorAba('Historico')">Recentes</div>
         </div>
-        <button class="btn-sort" id="btnSort" onclick="alternarOrdem()">A-Z</button>
     </div>
 
-    <!-- Container Principal com Sistema de Manutenção Automático -->
+    <!-- Container Principal -->
     <div class="container" id="mainContainer">
-        <div class="status-message">A carregar canais de futebol...</div>
+        <div class="status-message">A carregar interface...</div>
     </div>
 
-    <!-- Janela de Detalhes (Modal) -->
+    <!-- Modal de Transmissão -->
     <div class="detail-overlay" id="detailModal" onclick="fecharDetalhesFora(event)">
         <div class="detail-card" id="detailCard">
             <div class="detail-header">
                 <img id="detCapa" class="detail-poster" src="" alt="Logo">
                 <div class="detail-meta">
-                    <div class="detail-category-tag" id="detCategoria">Futebol Live</div>
-                    <div class="detail-title" id="detTitulo">Nome do Canal</div>
-                    <div style="font-size: 11px; color: var(--accent); font-weight: 700;">● TRANSMISSÃO AO VIVO</div>
+                    <div class="detail-category-tag" id="detCategoria">AO VIVO</div>
+                    <div class="detail-title" id="detTitulo">Canal</div>
+                    <div id="detQualidadeBadge" style="font-size: 11px; color: var(--live-red); font-weight: 800;">● SINAL EM DIRETO</div>
                 </div>
             </div>
             <div class="vlc-notice">
-                ⚽ Abertura direta do sinal de jogo no leitor VLC do seu dispositivo.
+                ⚠️Toque abaixo para abrir o sinal de vídeo diretamente no leitor VLC instalado no seu dispositivo.
             </div>
             <div class="detail-actions">
                 <a id="btnAssistir" href="#" class="btn-play-vlc" onclick="salvarHistoricoAtivo()">Assistir no VLC</a>
@@ -560,15 +392,12 @@
         let categoriasMap = {};
         let favoritos = JSON.parse(localStorage.getItem('futebol_favs')) || [];
         let historicoLista = JSON.parse(localStorage.getItem('futebol_history_list')) || [];
-        
         let canalSelecionado = null;
         let tempoBusca = null;
         let abaAtiva = 'Todos';
-        let ordemAZ = false;
 
         async function carregarCanais() {
             try {
-                // Podes usar um ficheiro dedicado como 'futebol.json' ou 'aovivo.json'
                 const response = await fetch('futebol.json');
                 const dadosJson = await response.json();
                 
@@ -576,26 +405,45 @@
                     listaCanais = dadosJson.channels.map(item => {
                         let categoria = item.group || (item.attributes && item.attributes['group-title']) || "Canais Esportivos";
                         let capa = (item.attributes && item.attributes['tvg-logo']) || "";
-                        let nome = item.name || "Canal ao Vivo";
-                        return {
-                            titulo: nome,
-                            categoria: categoria.trim(),
-                            capa: capa,
-                            url: item.url || ""
+                        let nome = item.name || "Canal";
+                        
+                        let qualidade = "HD";
+                        let nomeLower = nome.toLowerCase();
+                        if (nomeLower.includes("4k") || nomeLower.includes("uhd")) {
+                            qualidade = "4K";
+                        } else if (nomeLower.includes("fhd") || nomeLower.includes("full hd") || nomeLower.includes("1080p")) {
+                            qualidade = "FHD";
+                        } else if (nomeLower.includes("sd") || nomeLower.includes("standard")) {
+                            qualidade = "SD";
+                        } else if (nomeLower.includes("hd")) {
+                            qualidade = "HD";
+                        }
+
+                        return { 
+                            titulo: nome, 
+                            categoria: categoria.trim(), 
+                            capa: capa, 
+                            url: item.url || "", 
+                            qualidade: qualidade 
                         };
                     });
                 } else if (Array.isArray(dadosJson)) {
-                    listaCanais = dadosJson;
+                    listaCanais = dadosJson.map(item => {
+                        let nome = item.titulo || item.name || "Canal";
+                        let qual = "HD";
+                        let nL = nome.toLowerCase();
+                        if (nL.includes("4k")) qual = "4K";
+                        else if (nL.includes("fhd") || nL.includes("1080p")) qual = "FHD";
+                        else if (nL.includes("sd")) qual = "SD";
+                        return { ...item, qualidade: qual };
+                    });
                 }
 
                 organizarCategorias();
-                construirAbas();
+                atualizarContadores();
                 renderizarHome();
 
-                setTimeout(() => {
-                    document.getElementById('splashScreen').classList.add('hidden');
-                }, 600);
-
+                setTimeout(() => { document.getElementById('splashScreen').classList.add('hidden'); }, 400);
             } catch (e) {
                 console.error(e);
                 document.getElementById('splashScreen').classList.add('hidden');
@@ -606,67 +454,14 @@
         function organizarCategorias() {
             categoriasMap = {};
             listaCanais.forEach(canal => {
-                const cat = canal.categoria !== "" ? canal.categoria : "Esportes";
+                const cat = canal.categoria !== "" ? canal.categoria : "Outros Canais";
                 if (!categoriasMap[cat]) categoriasMap[cat] = [];
                 categoriasMap[cat].push(canal);
             });
-
-            if (ordemAZ) {
-                for (const cat in categoriasMap) {
-                    categoriasMap[cat].sort((a, b) => a.titulo.localeCompare(b.titulo));
-                }
-            }
         }
 
-        function alternarOrdem() {
-            ordemAZ = !ordemAZ;
-            document.getElementById('btnSort').textContent = ordemAZ ? "Padrão" : "A-Z";
-            document.getElementById('btnSort').style.background = ordemAZ ? "rgba(48,209,88,0.2)" : "var(--surface-color)";
-            organizarCategorias();
-            filtrarPorAba(abaAtiva);
-        }
-
-        function construirAbas() {
-            const tabsContainer = document.getElementById('filterTabs');
-            tabsContainer.innerHTML = `
-                <div class="tab-chip ${abaAtiva === 'Todos' ? 'active' : ''}" onclick="filtrarPorAba('Todos')">Todos</div>
-                <div class="tab-chip ${abaAtiva === 'Favoritos' ? 'active' : ''}" onclick="filtrarPorAba('Favoritos')">Favoritos (${favoritos.length})</div>
-                <div class="tab-chip ${abaAtiva === 'Historico' ? 'active' : ''}" onclick="filtrarPorAba('Historico')">Recentes (${historicoLista.length})</div>
-            `;
-            
-            for (const cat of Object.keys(categoriasMap)) {
-                let chip = document.createElement('div');
-                chip.className = `tab-chip ${abaAtiva === cat ? 'active' : ''}`;
-                chip.textContent = cat;
-                chip.onclick = () => filtrarPorAba(cat);
-                tabsContainer.appendChild(chip);
-            }
-        }
-
-        function filtrarPorAba(nomeAba) {
-            abaAtiva = nomeAba;
-            document.getElementById('searchInput').value = '';
-            construirAbas();
-
-            if (listaCanais.length === 0) {
-                mostrarAvisoCatalogoVazio();
-                return;
-            }
-
-            if (nomeAba === 'Todos') {
-                renderizarHome();
-            } else if (nomeAba === 'Favoritos') {
-                let listaFavs = [...favoritos];
-                if (ordemAZ) listaFavs.sort((a, b) => a.titulo.localeCompare(b.titulo));
-                renderizarListaEspecifica("Favoritos", listaFavs, false);
-            } else if (nomeAba === 'Historico') {
-                let listaHist = [...historicoLista];
-                if (ordemAZ) listaHist.sort((a, b) => a.titulo.localeCompare(b.titulo));
-                renderizarListaEspecifica("Recentes", listaHist, true);
-            } else {
-                renderizarListaEspecifica(nomeAba, categoriasMap[nomeAba], false);
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        function atualizarContadores() {
+            document.getElementById('favCount').textContent = favoritos.length;
         }
 
         function renderizarHome() {
@@ -678,26 +473,29 @@
                 return;
             }
 
-            // 1. Seção de Favoritos no Topo da Home (se houver)
-            if (favoritos.length > 0) {
-                const favSection = document.createElement('div');
-                favSection.className = 'category-section';
-                favSection.innerHTML = `
+            // 1. CARROSSEL DE DESTAQUES PRINCIPAIS NO TOPO
+            let destaques = [...listaCanais].sort(() => 0.5 - Math.random()).slice(0, 8);
+            if (destaques.length > 0) {
+                const heroSection = document.createElement('div');
+                heroSection.className = 'category-section';
+                heroSection.innerHTML = `
                     <div class="category-header">
-                        <div class="category-title">Canais Favoritos</div>
-                        <button class="btn-see-more" onclick="filtrarPorAba('Favoritos')">Ver Todos (${favoritos.length})</button>
+                        <div class="category-title">Canais em Destaque</div>
                     </div>
                 `;
-                const favCarousel = document.createElement('div');
-                favCarousel.className = 'movies-carousel';
-                favoritos.slice(0, 8).forEach(canal => {
-                    favCarousel.appendChild(criarCardCanal(canal));
+                
+                const carousel = document.createElement('div');
+                carousel.className = 'matches-carousel';
+                
+                destaques.forEach(canal => {
+                    carousel.appendChild(criarCardCanal(canal));
                 });
-                favSection.appendChild(favCarousel);
-                container.appendChild(favSection);
+
+                heroSection.appendChild(carousel);
+                container.appendChild(heroSection);
             }
 
-            // 2. Categorias de Canais ao Vivo
+            // 2. CATEGORIAS DE CANAIS EM CARROSSÉIS FLUIDOS
             for (const [categoria, itens] of Object.entries(categoriasMap)) {
                 const sectionDiv = document.createElement('div');
                 sectionDiv.className = 'category-section';
@@ -714,26 +512,17 @@
                 if (itens.length > 8) {
                     const btnMore = document.createElement('button');
                     btnMore.className = 'btn-see-more';
-                    btnMore.textContent = `Ver Mais (${itens.length})`;
-                    btnMore.onclick = () => filtrarPorAba(categoria);
+                    btnMore.textContent = `Ver Todos (${itens.length})`;
+                    btnMore.onclick = () => renderizarListaEspecifica(categoria, itens);
                     headerDiv.appendChild(btnMore);
                 }
 
                 const carouselDiv = document.createElement('div');
-                carouselDiv.className = 'movies-carousel';
+                carouselDiv.className = 'matches-carousel';
 
-                itens.slice(0, 8).forEach(canal => {
+                itens.slice(0, 10).forEach(canal => {
                     carouselDiv.appendChild(criarCardCanal(canal));
                 });
-
-                if (itens.length > 8) {
-                    const seeMoreCard = document.createElement('div');
-                    seeMoreCard.className = 'see-more-card';
-                    seeMoreCard.style.cssText = "background:var(--surface-color); border:0.5px dashed rgba(255,255,255,0.25); border-radius:var(--radius); aspect-ratio:16/10; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; flex:0 0 135px; width:135px;";
-                    seeMoreCard.innerHTML = `<div style="font-size:12px; font-weight:600; color:var(--accent); text-align:center; padding:0 10px;">Ver Mais (${itens.length})</div>`;
-                    seeMoreCard.onclick = () => filtrarPorAba(categoria);
-                    carouselDiv.appendChild(seeMoreCard);
-                }
 
                 sectionDiv.appendChild(headerDiv);
                 sectionDiv.appendChild(carouselDiv);
@@ -745,84 +534,73 @@
             const container = document.getElementById('mainContainer');
             container.innerHTML = `
                 <div class="empty-catalog-box">
-                    <div class="empty-catalog-icon">⚽</div>
-                    <div class="empty-catalog-title">Grelha em Atualização</div>
-                    <div class="empty-catalog-text">Os canais de futebol e transmissões ao vivo estão a ser preparados. As partidas e links diretos aparecem aqui em breve!</div>
-                    <a href="index.html" class="empty-catalog-btn">Explorar FreeTV</a>
+                    <div style="font-size: 16px; font-weight: 800;">Grelha em Atualização</div>
+                    <div style="font-size: 13px; color: var(--text-secondary);">Os canais de transmissão estão a ser configurados no futebol.json.</div>
                 </div>
             `;
-        }
-
-        function renderizarListaEspecifica(titulo, itens, isHistorico) {
-            const container = document.getElementById('mainContainer');
-            container.innerHTML = '';
-
-            const headerBar = document.createElement('div');
-            headerBar.className = 'list-header-bar';
-
-            const navBar = document.createElement('div');
-            navBar.className = 'nav-back-bar';
-            navBar.innerHTML = `<button class="btn-back" onclick="voltarHome()">Voltar</button><h2 style="font-size:16px; font-weight:600;">${titulo} (${itens.length})</h2>`;
-            headerBar.appendChild(navBar);
-
-            if (isHistorico && itens.length > 0) {
-                const clearBtn = document.createElement('button');
-                clearBtn.className = 'btn-clear-history';
-                clearBtn.textContent = 'Limpar Recentes';
-                clearBtn.onclick = limparHistoricoCompleto;
-                headerBar.appendChild(clearBtn);
-            }
-
-            container.appendChild(headerBar);
-
-            const gridWrapper = document.createElement('div');
-            gridWrapper.className = 'movies-grid-wrapper';
-
-            const gridDiv = document.createElement('div');
-            gridDiv.className = 'movies-grid';
-
-            if (!itens || itens.length === 0) {
-                gridWrapper.innerHTML = '<div class="status-message">Nenhum canal encontrado nesta lista.</div>';
-                container.appendChild(gridWrapper);
-                return;
-            }
-
-            itens.forEach(canal => {
-                gridDiv.appendChild(criarCardCanal(canal));
-            });
-
-            gridWrapper.appendChild(gridDiv);
-            container.appendChild(gridWrapper);
         }
 
         function criarCardCanal(canal) {
             const card = document.createElement('div');
-            card.className = 'movie-card';
+            card.className = 'match-card';
+            const qual = canal.qualidade || "HD";
 
             card.innerHTML = `
                 <div class="poster-wrapper">
-                    <div class="live-badge">AO VIVO</div>
-                    <img class="movie-poster" src="${canal.capa}" alt="${canal.titulo}" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=500'">
+                    <div class="live-badge">LIVE</div>
+                    <div class="quality-badge">${qual}</div>
+                    <img class="match-logo" src="${canal.capa}" alt="${canal.titulo}" onerror="this.src='https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=500'">
                 </div>
-                <div class="movie-details">
-                    <div class="movie-name">${canal.titulo}</div>
+                <div class="match-details">
+                    <div class="match-name">${canal.titulo}</div>
+                    <div class="match-sub">Transmissão Direta</div>
                 </div>
             `;
-
             card.onclick = () => abrirDetalhes(canal);
             return card;
         }
 
-        function limparHistoricoCompleto() {
-            historicoLista = [];
-            localStorage.removeItem('futebol_history_list');
-            filtrarPorAba('Historico');
+        function filtrarPorAba(nomeAba) {
+            abaAtiva = nomeAba;
+            document.getElementById('searchInput').value = '';
+            
+            document.querySelectorAll('.tab-chip').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = '';
+
+            if (nomeAba === 'Todos') {
+                renderizarHome();
+            } else if (nomeAba === 'Favoritos') {
+                renderizarListaEspecifica("Canais Favoritos", favoritos);
+            } else if (nomeAba === 'Historico') {
+                renderizarListaEspecifica("Transmissões Recentes", historicoLista);
+            }
+        }
+
+        function renderizarListaEspecifica(titulo, itens) {
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = `
+                <div class="list-header-bar">
+                    <button class="btn-back" onclick="voltarHome()">Voltar</button>
+                    <h2 style="font-size: 16px; font-weight: 800;">${titulo} (${itens.length})</h2>
+                </div>
+                <div class="matches-grid-wrapper">
+                    <div class="matches-grid" id="gridContent"></div>
+                </div>
+            `;
+            const grid = document.getElementById('gridContent');
+            if (!itens || itens.length === 0) {
+                grid.innerHTML = '<div class="status-message">Nenhum canal encontrado nesta lista.</div>';
+                return;
+            }
+            itens.forEach(canal => { grid.appendChild(criarCardCanal(canal)); });
         }
 
         function toggleFavoritoAtual() {
             if (!canalSelecionado) return;
             const index = favoritos.findIndex(f => f.titulo === canalSelecionado.titulo && f.url === canalSelecionado.url);
-            
             if (index > -1) {
                 favoritos.splice(index, 1);
                 document.getElementById('btnFav').textContent = "Adicionar aos Favoritos";
@@ -830,42 +608,32 @@
                 favoritos.push(canalSelecionado);
                 document.getElementById('btnFav').textContent = "Remover dos Favoritos";
             }
-
             localStorage.setItem('futebol_favs', JSON.stringify(favoritos));
-            construirAbas();
+            atualizarContadores();
         }
 
         function salvarHistoricoAtivo() {
             if (!canalSelecionado) return;
-            
             historicoLista = historicoLista.filter(f => !(f.titulo === canalSelecionado.titulo && f.url === canalSelecionado.url));
             historicoLista.unshift(canalSelecionado);
             if (historicoLista.length > 20) historicoLista.pop();
-
             localStorage.setItem('futebol_history_list', JSON.stringify(historicoLista));
-            construirAbas();
         }
 
         function dispararBuscaComDelay() {
             clearTimeout(tempoBusca);
             const termo = document.getElementById('searchInput').value.toLowerCase().trim();
-
-            if (!termo || listaCanais.length === 0) {
-                return;
-            }
+            if (!termo) { renderizarHome(); return; }
 
             tempoBusca = setTimeout(() => {
-                let filtrados = listaCanais.filter(canal => 
-                    canal.titulo.toLowerCase().includes(termo)
-                );
-                if (ordemAZ) filtrados.sort((a, b) => a.titulo.localeCompare(b.titulo));
-                renderizarListaEspecifica(`Pesquisa: "${termo}"`, filtrados, false);
-            }, 500);
+                let filtrados = listaCanais.filter(c => c.titulo.toLowerCase().includes(termo));
+                renderizarListaEspecifica(`Pesquisa: "${termo}"`, filtrados);
+            }, 400);
         }
 
         function voltarHome() {
             document.getElementById('searchInput').value = '';
-            filtrarPorAba('Todos');
+            document.querySelectorAll('.tab-chip')[0].click();
         }
 
         function abrirDetalhes(canal) {
@@ -873,6 +641,9 @@
             document.getElementById('detTitulo').textContent = canal.titulo;
             document.getElementById('detCategoria').textContent = canal.categoria || 'Futebol Live';
             document.getElementById('detCapa').src = canal.capa || 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=500';
+            
+            const qual = canal.qualidade || "HD";
+            document.getElementById('detQualidadeBadge').innerHTML = `● SINAL EM DIRETO • <span style="color:#fff;">${qual}</span>`;
 
             const vlcUrl = `vlc-x-callback://x-callback-url/stream?url=${encodeURIComponent(canal.url)}`;
             document.getElementById('btnAssistir').href = vlcUrl;
@@ -883,15 +654,8 @@
             document.getElementById('detailModal').classList.add('active');
         }
 
-        function fecharDetalhes() {
-            document.getElementById('detailModal').classList.remove('active');
-        }
-
-        function fecharDetalhesFora(event) {
-            if (event.target.id === 'detailModal') {
-                fecharDetalhes();
-            }
-        }
+        function fecharDetalhes() { document.getElementById('detailModal').classList.remove('active'); }
+        function fecharDetalhesFora(event) { if (event.target.id === 'detailModal') fecharDetalhes(); }
 
         carregarCanais();
     </script>
