@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Apple TV Style - Filmesss</title>
+    <title>Apple TV Style - Filmes</title>
     <style>
         :root {
             --bg-color: #000000;
@@ -21,7 +21,7 @@
         /* Cabeçalho Limpo Estilo Apple */
         header {
             padding: 20px 24px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             position: sticky;
@@ -32,7 +32,7 @@
             align-items: center;
             border-bottom: 0.5px solid rgba(255, 255, 255, 0.1);
         }
-        .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.5px; color: var(--text-primary); }
+        .brand { font-size: 19px; font-weight: 600; letter-spacing: -0.5px; color: var(--text-primary); }
         .search-box {
             background: rgba(255, 255, 255, 0.1);
             border: none;
@@ -45,21 +45,6 @@
             transition: width 0.3s ease;
         }
         .search-box:focus { width: 220px; background: rgba(255, 255, 255, 0.15); }
-
-        /* Área do Player Focada */
-        .player-container {
-            width: 100%;
-            background: #000;
-            position: relative;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
-        video {
-            width: 100%;
-            max-height: 50vh;
-            display: block;
-            background: #000;
-            outline: none;
-        }
 
         /* Seção de Catálogo */
         .catalog-section { padding: 24px; flex: 1; }
@@ -79,6 +64,8 @@
             background: transparent;
             cursor: pointer;
             transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            text-decoration: none;
+            display: block;
         }
         .movie-card:active { transform: scale(0.96); }
 
@@ -139,20 +126,15 @@
 
     <!-- Topo Minimalista -->
     <header>
-        <div class="brand"> Filmes</div>
+        <div class="brand"> Apple TV</div>
         <input type="text" id="searchInput" class="search-box" placeholder="Pesquisar..." oninput="filtrarFilmes()">
     </header>
 
-    <!-- Player de Vídeo -->
-    <div class="player-container">
-        <video id="videoPlayer" controls playsinline></video>
-    </div>
-
     <!-- Catálogo Estilo Apple TV -->
     <div class="catalog-section">
-        <div class="section-title">Disponíveis</div>
+        <div class="section-title">Filmes em Destaque</div>
         <div class="movies-grid" id="moviesGrid">
-            <div class="status-message">A carregar filmes...</div>
+            <div class="status-message">A carregar catálogo...</div>
         </div>
     </div>
 
@@ -163,12 +145,7 @@
             try {
                 const response = await fetch('filmes.json');
                 listaFilmes = await response.json();
-                
                 renderizarGrid(listaFilmes);
-
-                if (listaFilmes.length > 0) {
-                    prepararFilme(listaFilmes[0].url);
-                }
             } catch (e) {
                 console.error(e);
                 document.getElementById('moviesGrid').innerHTML = 
@@ -186,8 +163,12 @@
             }
 
             filmes.forEach(filme => {
-                const card = document.createElement('div');
+                const card = document.createElement('a');
                 card.className = 'movie-card';
+                // Usando target="_blank" e rel="noopener" para abrir o link de vídeo fluido no player nativo do iOS
+                card.href = filme.url;
+                card.target = "_blank";
+                card.rel = "noopener";
                 
                 card.innerHTML = `
                     <div class="poster-wrapper">
@@ -199,10 +180,6 @@
                     </div>
                 `;
 
-                card.onclick = () => {
-                    tocarFilme(filme.url);
-                };
-
                 grid.appendChild(card);
             });
         }
@@ -213,30 +190,6 @@
                 filme.titulo.toLowerCase().includes(termo)
             );
             renderizarGrid(filtrados);
-        }
-
-        function prepararFilme(url) {
-            const video = document.getElementById('videoPlayer');
-            video.src = url;
-            video.crossOrigin = "anonymous";
-        }
-
-        function tocarFilme(url) {
-            const video = document.getElementById('videoPlayer');
-            
-            video.pause();
-            video.removeAttribute('src');
-            video.load();
-
-            video.src = url;
-            video.crossOrigin = "anonymous";
-            video.load();
-            
-            video.play().catch(err => {
-                console.log("Reprodução interativa aguardando toque:", err);
-            });
-            
-            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         carregarFilmes();
