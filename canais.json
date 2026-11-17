@@ -1,8 +1,110 @@
 [
   {
-    "name": "🔴 Teste de Vídeo (Big Buck Bunny HLS)",
-    "group": "CANAIS | TESTE",
-    "logo": "https://i.imgur.com/hwOGFQs.png",
-    "url": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"
+    "name": "ESPN 2 FHD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn62M_UnjRfC8j0VMnO9KkJg/m3u8"
+  },
+  {
+    "name": "ESPN 2 HD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn5koV5iYakWF1X65j5NWMRI/m3u8"
+  },
+  {
+    "name": "ESPN 2 SD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn6Cqgx1mgrnL6Oi8Ilbmj8e/m3u8"
+  },
+  {
+    "name": "ESPN 3 FHD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn4RGbkFzXW7JyGDKCue2rkr/m3u8"
+  },
+  {
+    "name": "ESPN 3 HD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn5WrU1x0hqByOx0USWqnsaS/m3u8"
+  },
+  {
+    "name": "ESPN 3 SD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn4JQfKoF2yxj04qaCMlbJjI/m3u8"
+  },
+  {
+    "name": "ESPN 4 FHD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn6QzSYkW1FnvJmVmBSxAKPC/m3u8"
+  },
+  {
+    "name": "ESPN 4 HD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn65cddtY9vxPPvHVhJ-fISc/m3u8"
+  },
+  {
+    "name": "ESPN 4 SD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn43KKU9TbvG9UPJm-11BwqW/m3u8"
+  },
+  {
+    "name": "ESPN 5 FHD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-d5qnXLf0B-ty0Zqa3SPWn4ZcAVa8W4Oz0yj3PSBIZ4a/m3u8"
+  },
+  {
+    "name": "ESPN 5 HD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKVF2HQ6_RrCPfkEI-ZGP2Xp/m3u8"
+  },
+  {
+    "name": "ESPN 5 SD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKU1yXB-sV43b_IMSUrhAgQ3/m3u8"
+  },
+  {
+    "name": "ESPN 6 FHD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKU6o0TQZPL6GIH--33WGkTk/m3u8"
+  },
+  {
+    "name": "ESPN 6 HD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKXytAB0Zba8RdEn71jAju0a/m3u8"
+  },
+  {
+    "name": "ESPN 6 SD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKVks57IhhSSCoY5IaIcE-yR/m3u8"
+  },
+  {
+    "name": "ESPN FHD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKXjW0ht8PFZVJzfxo7UmOeM/m3u8"
+  },
+  {
+    "name": "ESPN HD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKWZEh6D-LPqi4fizZcRuMyq/m3u8"
+  },
+  {
+    "name": "ESPN SD",
+    "group": "CANAIS | ESPN",
+    "logo": "https://i.imgur.com/kRPWKrJ.png",
+    "url": "http://thxll.cloud:80/play/gPpCyccRxKsTDr50UWlQ-UQ4XerFx4Iil4tmSsUxRKWTa9TAsrW-6wWKfmEWhm4n/m3u8"
   }
 ]
