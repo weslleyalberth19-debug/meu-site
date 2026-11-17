@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    <title>MG Play - IPTV</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        :root {
+            --bg-base: #07090e;
+            --bg-card: #111827;
+            --bg-card-hover: #1f2937;
+            --accent: #38bdf8;
+            --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #2563eb 100%);
+            --text-main: #f9fafb;
+            --text-muted: #9ca3af;
+            --border: rgba(255, 255, 255, 0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg-base); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* Layout Principal */
+        .app-layout { display: flex; flex: 1; height: 100vh; overflow: hidden; }
+        
+        /* Área do Player (Esquerda / Superior no Mobile) */
+        .player-section { flex: 1; display: flex; flex-direction: column; background: #000; position: relative; justify-content: center; align-items: center; }
+        .video-wrapper { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+        video { width: 100%; height: 100%; max-height: 100vh; object-fit: contain; background: #000; outline: none; }
+        
+        .player-overlay-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+        .live-dot { width: 8px; height: 8px; background: #ef4444; border-radius: 50%; box-shadow: 0 0 8px #ef4444; animation: pulse 1.5s infinite; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+
+        /* Barra Lateral / Menu de Canais (Direita / Inferior no Mobile) */
+        .sidebar-section { width: 380px; background: var(--bg-base); border-left: 1px solid var(--border); display: flex; flex-direction: column; z-index: 20; }
+        
+        .sidebar-header { padding: 20px; background: var(--bg-card); border-bottom: 1px solid var(--border); }
+        .brand-title { font-size: 18px; font-weight: 700; background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .counter-badge { font-size: 12px; background: rgba(56, 189, 248, 0.1); color: var(--accent); padding: 3px 8px; border-radius: 12px; -webkit-text-fill-color: var(--accent); }
+
+        .controls-grid { display: flex; flex-direction: column; gap: 10px; }
+        
+        .search-bar, .select-dropdown {
+            width: 100%;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        .search-bar:focus, .select-dropdown:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.15); }
+        
+        /* Lista de Canais Estilizada */
+        .channels-scroll { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .channels-scroll::-webkit-scrollbar { width: 6px; }
+        .channels-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        .channel-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .channel-card:hover { background: var(--bg-card-hover); border-color: rgba(255, 255, 255, 0.15); transform: translateY(-1px); }
+        .channel-card.active { background: rgba(56, 189, 248, 0.08); border-color: var(--accent); }
+
+        .channel-thumb {
+            width: 42px;
+            height: 42px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            object-fit: contain;
+            padding: 4px;
+            border: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .channel-meta { flex: 1; overflow: hidden; }
+        .channel-title { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+        .channel-cat { font-size: 11px; color: var(--text-muted); margin-top: 3px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .empty-state { text-align: center; color: var(--text-muted); padding: 40px 20px; font-size: 14px; }
+
+        /* Responsividade para iPhone / Celular */
+        @media (max-width: 900px) {
+            .app-layout { flex-direction: column-reverse; }
+            .sidebar-section { width: 100%; height: 52vh; border-left: none; border-top: 1px solid var(--border); }
+            .player-section { height: 48vh; min-height: 48vh; }
+            .player-overlay-info { top: 10px; left: 10px; font-size: 11px; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-layout">
+        <!-- Player de Vídeo -->
+        <div class="player-section">
+            <div class="player-overlay-info">
+                <div class="live-dot"></div>
+                <span id="nowPlaying">Selecione um canal</span>
+            </div>
+            <div class="video-wrapper">
+                <video id="videoPlayer" controls playsinline autoplay></video>
+            </div>
+        </div>
+
+        <!-- Menu Lateral / Seleção -->
+        <div class="sidebar-section">
+            <div class="sidebar-header">
+                <div class="brand-title">
+                    ⚡ MG IPTV Play
+                    <span class="counter-badge" id="count">0 canais</span>
+                </div>
+                <div class="controls-grid">
+                    <select id="categorySelect" class="select-dropdown" onchange="filtrarCanais()">
+                        <option value="TODOS">Todas as Categorias</option>
+                    </select>
+                    <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Pesquisar canal..." oninput="filtrarCanais()">
+                </div>
+            </div>
+            
+            <div class="channels-scroll" id="channelsList">
+                <div class="empty-state">A carregar canais...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let todosCanais = [];
+        let hlsInstance = null;
+
+        async function carregarCanais() {
+            try {
+                const response = await fetch('canais.json');
+                todosCanais = await response.json();
+                
+                preencherCategorias();
+                renderizarLista(todosCanais);
+
+                if (todosCanais.length > 0) {
+                    tocarCanal(todosCanais[0].url, todosCanais[0].name);
+                    const primeiroCard = document.querySelector('.channel-card');
+                    if (primeiroCard) primeiroCard.classList.add('active');
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('channelsList').innerHTML = 
+                    '<div class="empty-state" style="color:#f87171;">Erro ao carregar canais.json. Verifique se o ficheiro está na raiz do repositório.</div>';
+            }
+        }
+
+        function preencherCategorias() {
+            const select = document.getElementById('categorySelect');
+            const grupos = [...new Set(todosCanais.map(c => c.group))];
+            
+            grupos.forEach(grupo => {
+                const opt = document.createElement('option');
+                opt.value = grupo;
+                opt.textContent = grupo;
+                select.appendChild(opt);
+            });
+        }
+
+        function filtrarCanais() {
+            const categoria = document.getElementById('categorySelect').value;
+            const termo = document.getElementById('searchInput').value.toLowerCase();
+
+            const filtrados = todosCanais.filter(canal => {
+                const bateCategoria = (categoria === 'TODOS') || (canal.group === categoria);
+                const bateTexto = canal.name.toLowerCase().includes(termo);
+                return bateCategoria && bateTexto;
+            });
+
+            renderizarLista(filtrados);
+        }
+
+        function renderizarLista(lista) {
+            const container = document.getElementById('channelsList');
+            document.getElementById('count').innerText = `${lista.length} canais`;
+            container.innerHTML = '';
+
+            if (lista.length === 0) {
+                container.innerHTML = '<div class="empty-state">Nenhum canal encontrado.</div>';
+                return;
+            }
+
+            lista.forEach(canal => {
+                const card = document.createElement('div');
+                card.className = 'channel-card';
+                
+                const logoHtml = canal.logo 
+                    ? `<img class="channel-thumb" src="${canal.logo}" onerror="this.src='https://i.imgur.com/hwOGFQs.png'">` 
+                    : `<img class="channel-thumb" src="https://i.imgur.com/hwOGFQs.png">`;
+
+                card.innerHTML = `
+                    ${logoHtml}
+                    <div class="channel-meta">
+                        <div class="channel-title">${canal.name}</div>
+                        <div class="channel-cat">${canal.group}</div>
+                    </div>
+                `;
+
+                card.onclick = () => {
+                    document.querySelectorAll('.channel-card').forEach(el => el.classList.remove('active'));
+                    card.classList.add('active');
+                    tocarCanal(canal.url, canal.name);
+                };
+
+                container.appendChild(card);
+            });
+        }
+
+        function tocarCanal(urlStream, nome) {
+            const video = document.getElementById('videoPlayer');
+            document.getElementById('nowPlaying').innerText = nome;
+
+            if (hlsInstance) {
+                hlsInstance.destroy();
+            }
+
+            if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                // Suporte nativo HLS no Safari do iPhone
+                video.src = urlStream;
+                video.play().catch(() => {});
+            } else if (Hls.isSupported()) {
+                // Suporte via Hls.js para navegadores alternativos
+                hlsInstance = new Hls();
+                hlsInstance.loadSource(urlStream);
+                hlsInstance.attachMedia(video);
+                hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
+                    video.play().catch(() => {});
+                });
+            } else {
+                video.src = urlStream;
+                video.play().catch(() => {});
+            }
+        }
+
+        carregarCanais();
+    </script>
+</body>
+</html>
