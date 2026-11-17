@@ -263,25 +263,9 @@
             });
         }
 
-        // Converte o link para forçar o final .m3u8 para compatibilidade total com HLS no iOS
-        function formatarUrlHls(url) {
-            if (url.endsWith('.m3u8') || url.endsWith('.ts')) {
-                return url;
-            }
-            const partes = url.split('/');
-            if (partes.length >= 5) {
-                const id = partes.pop();
-                const pass = partes.pop();
-                const user = partes.pop();
-                const base = partes.join('/');
-                return `${base}/live/${user}/${pass}/${id}.m3u8`;
-            }
-            return url;
-        }
-
-        function tocarCanal(urlOriginal, nome) {
+        // Toca a URL diretamente do JSON (já tratada e pronta em .m3u8)
+        function tocarCanal(urlStream, nome) {
             const video = document.getElementById('videoPlayer');
-            const urlHls = formatarUrlHls(urlOriginal);
             document.getElementById('nowPlaying').innerText = `Reproduzindo: ${nome}`;
 
             if (hlsInstance) {
@@ -289,23 +273,19 @@
             }
 
             if (video.canPlayType('application/vnd.apple.mpegurl')) {
-                video.src = urlHls;
+                // Suporte nativo HLS no Safari/iPhone
+                video.src = urlStream;
                 video.play().catch(() => {});
             } else if (Hls.isSupported()) {
+                // Suporte via Hls.js para outros navegadores
                 hlsInstance = new Hls();
-                hlsInstance.loadSource(urlHls);
+                hlsInstance.loadSource(urlStream);
                 hlsInstance.attachMedia(video);
                 hlsInstance.on(Hls.Events.MANIFEST_PARSED, () => {
                     video.play().catch(() => {});
                 });
-                hlsInstance.on(Hls.Events.ERROR, (event, data) => {
-                    if (data.fatal) {
-                        video.src = urlOriginal;
-                        video.play().catch(() => {});
-                    }
-                });
             } else {
-                video.src = urlOriginal;
+                video.src = urlStream;
                 video.play().catch(() => {});
             }
         }
