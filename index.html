@@ -13,6 +13,7 @@
             --text-secondary: #86868b;
             --accent: #0a84ff;
             --radius: 12px;
+            --modal-bg: rgba(28, 28, 30, 0.92);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
@@ -64,6 +65,7 @@
             background: transparent;
             display: flex;
             flex-direction: column;
+            cursor: pointer;
         }
 
         .poster-wrapper {
@@ -75,7 +77,9 @@
             position: relative;
             box-shadow: 0 4px 12px rgba(0,0,0,0.5);
             border: 0.5px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s ease;
         }
+        .movie-card:active .poster-wrapper { transform: scale(0.96); }
 
         .movie-poster {
             width: 100%;
@@ -86,9 +90,6 @@
         .movie-details {
             margin-top: 8px;
             padding: 0 2px;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
         }
         .movie-name {
             font-size: 13px;
@@ -108,33 +109,134 @@
             text-overflow: ellipsis;
         }
 
-        /* Botão Direto para o VLC */
-        .vlc-btn {
-            margin-top: 8px;
-            background: rgba(255, 255, 255, 0.1);
+        /* Página de Detalhes Estilo Apple TV */
+        .detail-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            display: flex;
+            align-items: flex-end;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        @media (min-width: 768px) {
+            .detail-overlay { align-items: center; justify-content: center; }
+        }
+        .detail-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .detail-card {
+            background: var(--modal-bg);
+            border-top: 0.5px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-height: 85vh;
+            border-radius: 24px 24px 0 0;
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.9);
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @media (min-width: 768px) {
+            .detail-card {
+                width: 500px;
+                border-radius: 24px;
+                border: 0.5px solid rgba(255, 255, 255, 0.2);
+                transform: scale(0.9);
+            }
+        }
+        .detail-overlay.active .detail-card {
+            transform: translateY(0);
+        }
+        @media (min-width: 768px) {
+            .detail-overlay.active .detail-card { transform: scale(1); }
+        }
+
+        .detail-header {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .detail-poster {
+            width: 100px;
+            aspect-ratio: 2/3;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 0.5px solid rgba(255,255,255,0.2);
+        }
+        .detail-meta {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .detail-title {
+            font-size: 20px;
+            font-weight: 700;
             color: #fff;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+        .detail-badge {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .detail-rating {
+            font-size: 13px;
+            color: #34c759;
+            font-weight: 600;
+        }
+        .detail-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .detail-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn-play-vlc {
+            background: #fff;
+            color: #000;
             border: none;
-            padding: 8px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 500;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
             text-align: center;
             text-decoration: none;
             display: block;
-            transition: background 0.2s ease, transform 0.1s ease;
+            transition: opacity 0.2s;
         }
-        .vlc-btn:active {
-            transform: scale(0.96);
-            background: rgba(255, 255, 255, 0.2);
+        .btn-play-vlc:active { opacity: 0.8; }
+
+        .btn-close-detail {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: none;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
         }
+        .btn-close-detail:active { background: rgba(255, 255, 255, 0.2); }
 
         .status-message {
             grid-column: 1 / -1;
-            text-align: center;
-            color: var(--text-secondary);
-            padding: 40px;
-            font-size: 14px;
+            text-align: center; color: var(--text-secondary); padding: 40px; font-size: 14px;
         }
     </style>
 </head>
@@ -146,11 +248,32 @@
         <input type="text" id="searchInput" class="search-box" placeholder="Pesquisar..." oninput="filtrarFilmes()">
     </header>
 
-    <!-- Catálogo -->
+    <!-- Catálogo de Filmes -->
     <div class="catalog-section">
         <div class="section-title">Filmes em Destaque</div>
         <div class="movies-grid" id="moviesGrid">
             <div class="status-message">A carregar catálogo...</div>
+        </div>
+    </div>
+
+    <!-- Página de Detalhes do Filme (Estilo Apple TV) -->
+    <div class="detail-overlay" id="detailModal" onclick="fecharDetalhesFora(event)">
+        <div class="detail-card" id="detailCard">
+            <div class="detail-header">
+                <img id="detCapa" class="detail-poster" src="" alt="Capa">
+                <div class="detail-meta">
+                    <div class="detail-badge" id="detCategoria">Categoria</div>
+                    <div class="detail-title" id="detTitulo">Título do Filme</div>
+                    <div class="detail-rating" id="detRating">★ 4.8 / 5.0</div>
+                </div>
+            </div>
+            <div class="detail-desc" id="detDesc">
+                Uma experiência cinematográfica selecionada especialmente para o FreeTV. Toque abaixo para reproduzir diretamente no VLC.
+            </div>
+            <div class="detail-actions">
+                <a id="btnAssistir" href="#" class="btn-play-vlc">▶ Abrir no VLC</a>
+                <button class="btn-close-detail" onclick="fecharDetalhes()">Voltar</button>
+            </div>
         </div>
     </div>
 
@@ -182,9 +305,6 @@
                 const card = document.createElement('div');
                 card.className = 'movie-card';
                 
-                // Link direto do protocolo do VLC aplicado numa tag <a> nativa
-                const vlcUrl = `vlc-x-callback://x-callback-url/stream?url=${encodeURIComponent(filme.url)}`;
-
                 card.innerHTML = `
                     <div class="poster-wrapper">
                         <img class="movie-poster" src="${filme.capa}" alt="${filme.titulo}" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500'">
@@ -192,12 +312,33 @@
                     <div class="movie-details">
                         <div class="movie-name">${filme.titulo}</div>
                         <div class="movie-category">${filme.categoria || 'Filme'}</div>
-                        <a href="${vlcUrl}" class="vlc-btn">▶ Abrir no VLC</a>
                     </div>
                 `;
 
+                card.onclick = () => abrirDetalhes(filme);
                 grid.appendChild(card);
             });
+        }
+
+        function abrirDetalhes(filme) {
+            document.getElementById('detTitulo').textContent = filme.titulo;
+            document.getElementById('detCategoria').textContent = filme.categoria || 'Filme';
+            document.getElementById('detCapa').src = filme.capa;
+
+            const vlcUrl = `vlc-x-callback://x-callback-url/stream?url=${encodeURIComponent(filme.url)}`;
+            document.getElementById('btnAssistir').href = vlcUrl;
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function fecharDetalhes() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function fecharDetalhesFora(event) {
+            if (event.target.id === 'detailModal') {
+                fecharDetalhes();
+            }
         }
 
         function filtrarFilmes() {
