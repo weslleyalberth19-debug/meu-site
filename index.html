@@ -1,0 +1,2237 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="referrer" content="no-referrer">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FreeTV">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='42' fill='%230b0910'/%3E%3Cpath d='M58 44h78v22H82v24h46v21H82v37H58V44z' fill='%23ffb703'/%3E%3C/svg%3E">
+    <link rel="manifest" href="manifest.json">
+    <title>FreeTV</title>
+    <style>
+        :root {
+            --bg-color: #0b0910;
+            --surface-color: #171322;
+            --surface-hover: #241d36;
+            --text-primary: #f6f4fa;
+            --text-secondary: #9e96b5;
+            --accent: #ffb703;
+            --accent-ink: #161000;
+            --accent-soft: rgba(255, 183, 3, 0.16);
+            --border-line: rgba(255, 255, 255, 0.1);
+            --radius: 14px;
+            --modal-bg: #14101f;
+            --header-bg: rgba(11, 9, 16, 0.88);
+            --filter-bg: rgba(23, 19, 34, 0.72);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Trebuchet MS", "Segoe UI", Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            height: 100%;
+            overscroll-behavior-y: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image:
+                radial-gradient(circle at 18% 0%, rgba(255, 183, 3, 0.12), transparent 38%),
+                radial-gradient(circle at 85% 15%, rgba(124, 58, 237, 0.14), transparent 42%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding-bottom: 24px;
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Tela de Abertura */
+        #splashScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        #splashScreen.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .splash-logo {
+            font-size: 34px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 14px;
+        }
+        .splash-spinner {
+            width: 26px;
+            height: 26px;
+            border: 2.5px solid rgba(255, 183, 3, 0.22);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notificação Toast */
+        #toastNotification {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--surface-hover);
+            border: 1px solid rgba(255, 183, 3, 0.35);
+            color: var(--text-primary);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 1000;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 90vw;
+            text-align: center;
+        }
+        #toastNotification.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Cabeçalho Estilo Cinema Velvet */
+        header {
+            padding: 15px 22px;
+            background: var(--header-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-line);
+        }
+
+        .brand {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 0.6px;
+            color: var(--accent);
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+
+        .search-wrapper {
+            position: relative;
+        }
+
+        .search-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            padding: 8px 12px;
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            outline: none;
+            width: 118px;
+            transition: background 0.2s, border-color 0.2s, width 0.2s;
+        }
+        @media (min-width: 420px) {
+            .search-box {
+                width: 145px;
+            }
+        }
+        .search-box:focus {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+        }
+
+        /* Dropdown de Histórico */
+        .search-history-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 240px;
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            border-radius: 14px;
+            padding: 12px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85);
+            z-index: 150;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .search-history-dropdown.active {
+            display: flex;
+        }
+        .search-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border-line);
+        }
+        .search-history-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .btn-clear-search {
+            background: transparent;
+            border: none;
+            color: #ff5c77;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .search-history-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 160px;
+            overflow-y: auto;
+        }
+        .search-tag {
+            background: var(--surface-hover);
+            border: 1px solid var(--border-line);
+            color: var(--text-primary);
+            font-size: 12px;
+            padding: 5px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: background 0.2s;
+        }
+        .search-tag:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-icon-header {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            color: var(--text-primary);
+            width: 35px;
+            height: 35px;
+            border-radius: 11px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.15s, border-color 0.2s, color 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-icon-header:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .btn-icon-header:active {
+            transform: scale(0.92);
+        }
+        .btn-icon-header.music-active {
+            background: var(--accent-soft);
+            border-color: rgba(255, 183, 3, 0.5);
+            color: var(--accent);
+        }
+
+        /* Barra de Filtros e Ordenação */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--filter-bg);
+            border-bottom: 1px solid var(--border-line);
+            padding: 0 20px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 12px 0;
+            scrollbar-width: none;
+            -webkit-overflow-scrolling: touch;
+        }
+        .filter-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .tab-chip {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            color: var(--text-secondary);
+            padding: 6px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .tab-chip.active {
+            background: var(--accent);
+            color: var(--accent-ink);
+            border-color: var(--accent);
+        }
+        .btn-sort {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+            margin-left: 10px;
+        }
+
+        /* Views Persistentes (SPA) */
+        .view-section {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+        }
+        .view-section.active {
+            display: flex;
+        }
+
+        /* Billboard Cinematográfico */
+        .hero-billboard {
+            position: relative;
+            width: 100%;
+            height: 390px;
+            overflow: hidden;
+            margin-bottom: 24px;
+            background: var(--surface-color);
+            border-bottom: 1px solid var(--border-line);
+        }
+        @media (min-width: 768px) {
+            .hero-billboard {
+                height: 480px;
+                border-radius: 20px;
+                margin: 16px auto 28px auto;
+                width: calc(100% - 32px);
+                border: 1px solid rgba(255, 183, 3, 0.24);
+            }
+        }
+
+        .billboard-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.8s ease, transform 6s ease;
+            transform: scale(1.04);
+        }
+        .billboard-slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1);
+            z-index: 2;
+        }
+
+        .billboard-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 20%;
+            filter: brightness(0.76);
+        }
+        .billboard-vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, var(--bg-color) 5%, rgba(11, 9, 16, 0.78) 38%, rgba(11, 9, 16, 0.16) 75%, rgba(11, 9, 16, 0.45) 100%);
+        }
+        .billboard-info {
+            position: absolute;
+            bottom: 34px;
+            left: 20px;
+            right: 20px;
+            z-index: 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 8px;
+        }
+        @media (min-width: 768px) {
+            .billboard-info {
+                align-items: flex-start;
+                text-align: left;
+                left: 40px;
+                max-width: 520px;
+            }
+        }
+
+        .billboard-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-soft);
+            border: 1px solid rgba(255, 183, 3, 0.45);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--accent);
+        }
+        .billboard-title {
+            font-size: 24px;
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.9);
+            line-height: 1.15;
+        }
+        @media (min-width: 768px) {
+            .billboard-title {
+                font-size: 34px;
+            }
+        }
+
+        .billboard-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        .billboard-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
+        .btn-billboard-play {
+            background: var(--accent);
+            color: var(--accent-ink);
+            border: none;
+            padding: 11px 22px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 6px 20px rgba(255, 183, 3, 0.28);
+            transition: transform 0.15s;
+        }
+        .btn-billboard-play:active {
+            transform: scale(0.95);
+        }
+        .billboard-play-glyph {
+            font-size: 11px;
+            line-height: 1;
+        }
+
+        .btn-billboard-fav {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            color: var(--text-primary);
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, border-color 0.2s, transform 0.15s;
+        }
+        .btn-billboard-fav:hover {
+            background: var(--surface-hover);
+            border-color: var(--accent);
+        }
+        .btn-billboard-fav:active {
+            transform: scale(0.92);
+        }
+        .btn-billboard-fav svg {
+            width: 18px;
+            height: 18px;
+            stroke: var(--accent);
+            fill: transparent;
+            transition: fill 0.25s ease, transform 0.2s ease;
+        }
+        .btn-billboard-fav.is-fav svg {
+            fill: var(--accent);
+        }
+
+        .billboard-dots {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 4;
+            display: flex;
+            gap: 6px;
+        }
+        .b-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.28);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .b-dot.active {
+            width: 18px;
+            border-radius: 4px;
+            background: var(--accent);
+        }
+
+        /* Container Principal */
+        .container {
+            padding: 0 16px 30px 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        #viewList {
+            padding-top: 24px;
+        }
+
+        .empty-catalog-box {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            border-radius: 18px;
+            padding: 36px 24px;
+            max-width: 420px;
+            margin: 40px auto;
+            text-align: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            align-items: center;
+        }
+        .empty-catalog-icon {
+            color: var(--accent);
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .empty-catalog-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .empty-catalog-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* Seções de Categoria */
+        .category-section {
+            width: 100%;
+            margin-bottom: 28px;
+        }
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+        .category-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+            border-left: 3px solid var(--accent);
+            padding-left: 10px;
+        }
+        .btn-see-more {
+            background: transparent;
+            border: none;
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+        .btn-see-more:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* Carrosséis */
+        .movies-carousel {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+            align-items: flex-start;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-x: contain;
+        }
+        .movies-carousel::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Cartão de Filme */
+        .movie-card-clean {
+            background: transparent;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            flex: 0 0 120px;
+            width: 120px;
+            min-width: 120px;
+            transition: transform 0.2s ease;
+        }
+        @media (min-width: 768px) {
+            .movie-card-clean {
+                flex: 0 0 150px;
+                width: 150px;
+                min-width: 150px;
+            }
+        }
+        .movie-card-clean:active {
+            transform: scale(0.95);
+        }
+
+        .poster-clean-wrapper {
+            width: 100%;
+            aspect-ratio: 2 / 3 !important;
+            border-radius: var(--radius);
+            overflow: hidden;
+            background: var(--surface-color);
+            position: relative;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65);
+            border: 1px solid var(--border-line);
+        }
+        .movie-card-clean:hover .poster-clean-wrapper {
+            border-color: rgba(255, 183, 3, 0.5);
+        }
+        .movie-clean-poster {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            position: absolute !important;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .quality-badge-clean {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            background: rgba(11, 9, 16, 0.86);
+            border: 1px solid rgba(255, 183, 3, 0.35);
+            color: var(--accent);
+            font-size: 8px;
+            font-weight: 800;
+            padding: 3px 6px;
+            border-radius: 6px;
+            z-index: 2;
+        }
+        .watched-dot {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+            z-index: 3;
+        }
+
+        .card-progress-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 3;
+        }
+        .card-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+        }
+
+        /* Cartão "Ver Mais" */
+        .see-more-card {
+            background: var(--surface-color);
+            border: 1px dashed rgba(255, 183, 3, 0.4);
+            border-radius: var(--radius);
+            aspect-ratio: 2 / 3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            cursor: pointer;
+            flex: 0 0 120px;
+            width: 120px;
+            min-width: 120px;
+            transition: background 0.2s, transform 0.2s;
+        }
+        @media (min-width: 768px) {
+            .see-more-card {
+                flex: 0 0 150px;
+                width: 150px;
+                min-width: 150px;
+            }
+        }
+        .see-more-card:hover {
+            background: var(--surface-hover);
+            transform: translateY(-4px);
+        }
+        .see-more-text {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--accent);
+            text-align: center;
+            padding: 0 8px;
+        }
+
+        /* Grelha "Ver Mais" Completa */
+        .movies-grid-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 12px;
+        }
+        .movies-grid-clean {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            width: 100%;
+            justify-content: center;
+            align-items: start;
+        }
+        @media (min-width: 480px) {
+            .movies-grid-clean {
+                grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+                gap: 14px;
+            }
+        }
+        @media (min-width: 768px) {
+            .movies-grid-clean {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 18px;
+            }
+        }
+        .movies-grid-clean .movie-card-clean {
+            width: 100% !important;
+            flex: none !important;
+            min-width: 0 !important;
+        }
+
+        .list-header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 4px;
+            width: 100%;
+        }
+        .nav-back-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-back {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-clear-history {
+            background: rgba(255, 92, 119, 0.15);
+            border: 1px solid rgba(255, 92, 119, 0.35);
+            color: #ff5c77;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Rodapé com Assinatura WS */
+        .site-footer {
+            margin-top: auto;
+            padding: 18px 20px 10px 20px;
+            border-top: 1px solid var(--border-line);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+        }
+        .site-footer strong {
+            color: var(--accent);
+            font-weight: 800;
+            letter-spacing: 0.6px;
+        }
+
+        /* Modal de Detalhes e Popup Inicial */
+        .detail-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            display: flex;
+            align-items: flex-end;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        @media (min-width: 768px) {
+            .detail-overlay {
+                align-items: center;
+                justify-content: center;
+            }
+        }
+        .detail-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .detail-card {
+            background: var(--modal-bg);
+            border-top: 1px solid rgba(255, 183, 3, 0.3);
+            width: 100%;
+            max-height: 88vh;
+            border-radius: 22px 22px 0 0;
+            padding: 24px;
+            overflow-y: auto;
+            box-shadow: 0 -20px 60px rgba(0, 0, 0, 0.9);
+            transform: translateY(100%);
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @media (min-width: 768px) {
+            .detail-card {
+                width: 440px;
+                border-radius: 22px;
+                border: 1px solid rgba(255, 183, 3, 0.3);
+                transform: scale(0.95);
+            }
+        }
+        .detail-overlay.active .detail-card {
+            transform: translateY(0);
+        }
+        @media (min-width: 768px) {
+            .detail-overlay.active .detail-card {
+                transform: scale(1);
+            }
+        }
+
+        /* Popup Inicial Informativo */
+        .welcome-overlay {
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 300;
+        }
+        .welcome-card {
+            border-radius: 22px;
+            border: 1px solid rgba(255, 183, 3, 0.35);
+            transform: scale(0.95);
+            max-width: 440px;
+        }
+        .welcome-overlay.active .welcome-card {
+            transform: scale(1);
+        }
+        .welcome-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--accent-soft);
+            border: 1px solid rgba(255, 183, 3, 0.4);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.9px;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+        .welcome-title {
+            font-size: 21px;
+            font-weight: 900;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            line-height: 1.25;
+        }
+        .welcome-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+        .welcome-device-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .welcome-device-item {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            border-radius: 14px;
+            padding: 13px 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        .welcome-device-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: var(--accent-soft);
+            border: 1px solid rgba(255, 183, 3, 0.3);
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+        .welcome-device-content h4 {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 3px;
+        }
+        .welcome-device-content p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        .detail-header {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        .detail-poster {
+            width: 106px;
+            aspect-ratio: 2/3;
+            border-radius: 12px;
+            object-fit: cover;
+            border: 1px solid var(--border-line);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, 0.75);
+        }
+        .detail-meta {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+            gap: 4px;
+        }
+        .detail-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .detail-category-tag {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+        }
+        .detail-quality-badge {
+            display: inline-block;
+            background: var(--accent-soft);
+            border: 1px solid rgba(255, 183, 3, 0.4);
+            color: var(--accent);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 6px;
+            width: fit-content;
+            margin-top: 4px;
+        }
+
+        .player-notice {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            padding: 12px 14px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 18px;
+            line-height: 1.45;
+        }
+
+        .detail-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .btn-main-play {
+            background: var(--accent);
+            color: var(--accent-ink);
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+            box-shadow: 0 6px 20px rgba(255, 183, 3, 0.25);
+        }
+        .btn-favorite-toggle {
+            background: var(--surface-color);
+            color: var(--text-primary);
+            border: 1px solid var(--border-line);
+            padding: 13px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: center;
+        }
+        .btn-close-detail {
+            background: transparent;
+            color: var(--text-secondary);
+            border: none;
+            padding: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        /* Player Normal do Site (Android / Desktop) */
+        .video-player-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .video-player-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .player-top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.85), transparent);
+            z-index: 15;
+        }
+        .player-top-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .player-top-tag {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+        .player-top-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .btn-player-close {
+            background: var(--surface-color);
+            border: 1px solid var(--border-line);
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .normal-video-elem {
+            width: 100%;
+            height: 100%;
+            max-height: 100vh;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .status-message {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px;
+            font-size: 13px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Tela de Abertura -->
+    <div id="splashScreen">
+        <div class="splash-logo">FreeTV</div>
+        <div class="splash-spinner"></div>
+    </div>
+
+    <!-- Popup Inicial Informativo sobre Reprodução -->
+    <div class="detail-overlay welcome-overlay" id="welcomeModal" onclick="fecharPopupInicialFora(event)">
+        <div class="detail-card welcome-card">
+            <div class="welcome-badge">Guia de Reprodução</div>
+            <h2 class="welcome-title">Experiência otimizada para o teu aparelho</h2>
+            <p class="welcome-subtitle">O FreeTV identifica automaticamente o teu sistema para oferecer a reprodução mais estável e fluida possível:</p>
+
+            <div class="welcome-device-list">
+                <div class="welcome-device-item">
+                    <div class="welcome-device-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                    <div class="welcome-device-content">
+                        <h4>Android &amp; Computador</h4>
+                        <p>Reprodução instantânea diretamente no player integrado do site, com gravação automática de onde paraste.</p>
+                    </div>
+                </div>
+
+                <div class="welcome-device-item">
+                    <div class="welcome-device-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <div class="welcome-device-content">
+                        <h4>iPhone &amp; iPad (iOS)</h4>
+                        <p>Para máxima compatibilidade de vídeo e áudio sem bloqueios, os títulos abrem diretamente na aplicação <strong>VLC</strong> instalada no aparelho.</p>
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn-main-play" style="width: 100%;" onclick="fecharPopupInicial()">Entendi, explorar catálogo</button>
+        </div>
+    </div>
+
+    <!-- Notificação Toast -->
+    <div id="toastNotification">Ligação copiada para a área de transferência!</div>
+
+    <!-- Cabeçalho -->
+    <header>
+        <div class="brand" onclick="irParaTopoHome()">FreeTV</div>
+        <div class="header-actions">
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" class="search-box" placeholder="Pesquisar..."
+                       onfocus="mostrarHistoricoPesquisa()"
+                       oninput="dispararBuscaComDelay()"
+                       onkeydown="if(event.key==='Enter') { salvarTermoPesquisa(this.value); fecharHistoricoPesquisa(); }">
+
+                <div class="search-history-dropdown" id="searchHistoryDropdown">
+                    <div class="search-history-header">
+                        <span class="search-history-title">Pesquisas Recentes</span>
+                        <button class="btn-clear-search" onclick="limparHistoricoPesquisa()">Limpar</button>
+                    </div>
+                    <div class="search-history-list" id="searchHistoryList"></div>
+                </div>
+            </div>
+
+            <button class="btn-icon-header music-active" id="btnMusicToggle" onclick="alternarMusicaAmbiente()" title="Música Ambiente">
+                <svg id="musicIconSvg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                </svg>
+            </button>
+
+            <button class="btn-icon-header" onclick="abrirFilmeAleatorio()" title="Sugestão Aleatória">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 3 21 3 21 8"></polyline>
+                    <line x1="4" y1="20" x2="21" y2="3"></line>
+                    <polyline points="21 16 21 21 16 21"></polyline>
+                    <line x1="15" y1="15" x2="21" y2="21"></line>
+                    <line x1="4" y1="4" x2="9" y2="9"></line>
+                </svg>
+            </button>
+
+            <button class="btn-icon-header" onclick="abrirPopupInicial()" title="Como Funciona">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+            </button>
+
+            <button class="btn-icon-header" onclick="copiarLinkSite()" title="Partilhar Site">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Barra de Filtros e Ordenação -->
+    <div class="filter-bar">
+        <div class="filter-tabs" id="filterTabs">
+            <div class="tab-chip active" onclick="selecionarAba('Todos')">Todos</div>
+            <div class="tab-chip" onclick="selecionarAba('Favoritos')">Favoritos (0)</div>
+            <div class="tab-chip" onclick="selecionarAba('Recentes')">Recentes (0)</div>
+        </div>
+        <button class="btn-sort" id="btnSort" onclick="alternarOrdem()">A-Z</button>
+    </div>
+
+    <!-- Views Persistentes -->
+    <div id="viewHome" class="view-section active"></div>
+    <div class="container">
+        <div id="viewList" class="view-section"></div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="site-footer">
+        <span>Feito por <strong>WS</strong></span>
+    </footer>
+
+    <!-- Modal de Detalhes -->
+    <div class="detail-overlay" id="detailModal" onclick="fecharDetalhesFora(event)">
+        <div class="detail-card" id="detailCard">
+            <div class="detail-header">
+                <img id="detCapa" class="detail-poster" src="" alt="Capa" referrerpolicy="no-referrer">
+                <div class="detail-meta">
+                    <div class="detail-category-tag" id="detCategoria">Categoria</div>
+                    <div class="detail-title" id="detTitulo">Título do Filme</div>
+                    <div class="detail-quality-badge" id="detQualidade">HD</div>
+                </div>
+            </div>
+            <div class="player-notice" id="detPlayerNotice"></div>
+            <div class="detail-actions" id="detActionsBox"></div>
+        </div>
+    </div>
+
+    <!-- Player Normal do Site (Android / Desktop) -->
+    <div class="video-player-overlay" id="videoPlayerOverlay">
+        <div class="player-top-bar">
+            <div class="player-top-info">
+                <div class="player-top-tag" id="playerTopTag">HD &bull; FREETV</div>
+                <div class="player-top-title" id="playerTopTitle">A reproduzir...</div>
+            </div>
+            <button class="btn-player-close" onclick="fecharPlayerNormal()">✕</button>
+        </div>
+        <video id="normalVideoElem" class="normal-video-elem" controls playsinline webkit-playsinline></video>
+    </div>
+
+    <script>
+        const FALLBACK_POSTER = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=500';
+        const FALLBACK_BILLBOARD = 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=800';
+
+        let listaFilmes = [];
+        let categoriasMap = {};
+        let favoritos = JSON.parse(localStorage.getItem('freetv_favs')) || [];
+        let historicoProgresso = JSON.parse(localStorage.getItem('freetv_progress')) || {};
+        let assistidosLista = JSON.parse(localStorage.getItem('freetv_watched_list')) || [];
+        let historicoPesquisas = JSON.parse(localStorage.getItem('freetv_search_history')) || [];
+
+        const globalImageCache = new Map();
+
+        let filmeSelecionado = null;
+        let tempoBusca = null;
+        let abaAtiva = 'Todos';
+        let ordemAZ = false;
+        let salvarProgressoInterval = null;
+        let scrollPosAnterior = 0;
+        let homeJaRenderizada = false;
+
+        let billboardSlides = [];
+        let billboardIndex = 0;
+        let billboardTimer = null;
+
+        const videoElem = document.getElementById('normalVideoElem');
+        const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        /* =========================================================
+           SISTEMA DE MÚSICA AMBIENTE SIMPLES (ENQUANTO ESCOLHE)
+           ========================================================= */
+        let musicaHabilitadaPeloUsuario = JSON.parse(localStorage.getItem('freetv_music_enabled'));
+        if (musicaHabilitadaPeloUsuario === null) musicaHabilitadaPeloUsuario = true;
+
+        let audioCtx = null;
+        let masterGain = null;
+        let loopNotaTimer = null;
+        let passoMelodia = 0;
+        let pausadoPorVideo = false;
+
+        // Sequência calma de notas (Dó maior / Lá menor suave)
+        const notasAmbiente = [261.63, 329.63, 392.00, 493.88, 220.00, 261.63, 329.63, 392.00];
+
+        function atualizarBotaoMusicaUI(tocando) {
+            const btn = document.getElementById('btnMusicToggle');
+            const svg = document.getElementById('musicIconSvg');
+            if (!btn || !svg) return;
+
+            if (tocando) {
+                btn.classList.add('music-active');
+                btn.title = 'Música Ambiente: Ligada (Clique para mutar)';
+                svg.innerHTML = `
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                `;
+            } else {
+                btn.classList.remove('music-active');
+                btn.title = 'Música Ambiente: Desligada (Clique para ligar)';
+                svg.innerHTML = `
+                    <path d="M9 18V5l12-2v13"></path>
+                    <circle cx="6" cy="18" r="3"></circle>
+                    <circle cx="18" cy="16" r="3"></circle>
+                    <line x1="2" y1="2" x2="22" y2="22"></line>
+                `;
+            }
+        }
+
+        function tocarNotaSuave(freq) {
+            if (!audioCtx || !masterGain || audioCtx.state !== 'running') return;
+
+            const agora = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const notaGain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, agora);
+
+            // Fade in e fade out bem macios para não estalar
+            notaGain.gain.setValueAtTime(0.0001, agora);
+            notaGain.gain.exponentialRampToValueAtTime(0.14, agora + 0.35);
+            notaGain.gain.exponentialRampToValueAtTime(0.0001, agora + 2.3);
+
+            osc.connect(notaGain);
+            notaGain.connect(masterGain);
+
+            osc.start(agora);
+            osc.stop(agora + 2.35);
+        }
+
+        function iniciarLoopMusica() {
+            pararLoopMusica();
+            if (!musicaHabilitadaPeloUsuario || pausadoPorVideo) return;
+
+            try {
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    audioCtx = new AudioContextClass();
+                    masterGain = audioCtx.createGain();
+                    masterGain.gain.value = 0.22; // Volume ambiente baixo
+                    masterGain.connect(audioCtx.destination);
+                }
+
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+
+                tocarNotaSuave(notasAmbiente[passoMelodia % notasAmbiente.length]);
+                passoMelodia++;
+
+                loopNotaTimer = setInterval(() => {
+                    if (!musicaHabilitadaPeloUsuario || pausadoPorVideo) return;
+                    if (audioCtx && audioCtx.state === 'suspended') {
+                        audioCtx.resume().catch(() => {});
+                    }
+                    tocarNotaSuave(notasAmbiente[passoMelodia % notasAmbiente.length]);
+                    passoMelodia++;
+                }, 1450);
+
+                atualizarBotaoMusicaUI(true);
+            } catch (e) {
+                console.warn(e);
+            }
+        }
+
+        function pararLoopMusica() {
+            clearInterval(loopNotaTimer);
+            loopNotaTimer = null;
+        }
+
+        function pausarMusicaParaFilme() {
+            pausadoPorVideo = true;
+            pararLoopMusica();
+            if (audioCtx && audioCtx.state === 'running') {
+                audioCtx.suspend().catch(() => {});
+            }
+            atualizarBotaoMusicaUI(false);
+        }
+
+        function retomarMusicaSeAtiva() {
+            pausadoPorVideo = false;
+            if (musicaHabilitadaPeloUsuario) {
+                iniciarLoopMusica();
+            } else {
+                atualizarBotaoMusicaUI(false);
+            }
+        }
+
+        function alternarMusicaAmbiente() {
+            musicaHabilitadaPeloUsuario = !musicaHabilitadaPeloUsuario;
+            localStorage.setItem('freetv_music_enabled', JSON.stringify(musicaHabilitadaPeloUsuario));
+
+            if (musicaHabilitadaPeloUsuario) {
+                pausadoPorVideo = false;
+                iniciarLoopMusica();
+                mostrarToast("Música ambiente ligada");
+            } else {
+                pararLoopMusica();
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend().catch(() => {});
+                }
+                atualizarBotaoMusicaUI(false);
+                mostrarToast("Música ambiente desligada");
+            }
+        }
+
+        // Ativa o áudio no primeiro toque/clique do usuário na página
+        function desbloquearAudioNoPrimeiroToque() {
+            if (musicaHabilitadaPeloUsuario && !pausadoPorVideo && !loopNotaTimer) {
+                iniciarLoopMusica();
+            } else if (audioCtx && audioCtx.state === 'suspended' && musicaHabilitadaPeloUsuario && !pausadoPorVideo) {
+                audioCtx.resume().catch(() => {});
+            }
+            document.removeEventListener('pointerdown', desbloquearAudioNoPrimeiroToque);
+            document.removeEventListener('keydown', desbloquearAudioNoPrimeiroToque);
+        }
+        document.addEventListener('pointerdown', desbloquearAudioNoPrimeiroToque);
+        document.addEventListener('keydown', desbloquearAudioNoPrimeiroToque);
+
+        /* ========================================================= */
+
+        function normalizarUrlImagem(url, fallback = FALLBACK_POSTER) {
+            if (!url || typeof url !== 'string') return fallback;
+            let limpa = url.trim();
+            if (!limpa) return fallback;
+            if (window.location.protocol === 'https:' && limpa.startsWith('http://')) {
+                return `https://images.weserv.nl/?url=${encodeURIComponent(limpa.replace(/^https?:\/\//i, ''))}`;
+            }
+            return limpa;
+        }
+
+        function montarLinkVlcIos(url) {
+            return `vlc://${url || ''}`;
+        }
+
+        function abrirPopupInicial() {
+            document.getElementById('welcomeModal').classList.add('active');
+        }
+
+        function fecharPopupInicial() {
+            document.getElementById('welcomeModal').classList.remove('active');
+            localStorage.setItem('freetv_welcome_seen', 'true');
+            if (musicaHabilitadaPeloUsuario && !pausadoPorVideo) {
+                iniciarLoopMusica();
+            }
+        }
+
+        function fecharPopupInicialFora(event) {
+            if (event.target.id === 'welcomeModal') {
+                fecharPopupInicial();
+            }
+        }
+
+        function verificarPrimeiroAcesso() {
+            if (!localStorage.getItem('freetv_welcome_seen')) {
+                setTimeout(() => {
+                    abrirPopupInicial();
+                }, 300);
+            }
+        }
+
+        async function carregarFilmes() {
+            try {
+                const response = await fetch('filmes.json');
+                const dadosJson = await response.json();
+
+                let bruto = [];
+                if (dadosJson.channels && Array.isArray(dadosJson.channels)) {
+                    bruto = dadosJson.channels;
+                } else if (Array.isArray(dadosJson)) {
+                    bruto = dadosJson;
+                }
+
+                listaFilmes = bruto.map(item => {
+                    let categoria = item.group || (item.attributes && item.attributes['group-title']) || "Outros";
+                    let capa = (item.attributes && item.attributes['tvg-logo']) || "";
+                    let nome = item.name || "Sem Título";
+
+                    let qualidade = "HD";
+                    let nomeLower = nome.toLowerCase();
+                    if (nomeLower.includes("hdr") || nomeLower.includes("4k") || nomeLower.includes("ultra")) {
+                        qualidade = "HDR";
+                    } else if (nomeLower.includes("fhd") || nomeLower.includes("1080p")) {
+                        qualidade = "FHD";
+                    } else if (Math.random() > 0.6) {
+                        qualidade = "HDR";
+                    }
+
+                    return {
+                        titulo: nome,
+                        categoria: categoria.trim(),
+                        capa: normalizarUrlImagem(capa, FALLBACK_POSTER),
+                        url: item.url || "",
+                        qualidade: qualidade
+                    };
+                });
+
+                organizarCategorias();
+                construirAbas();
+                renderizarHome();
+                atualizarBotaoMusicaUI(musicaHabilitadaPeloUsuario);
+
+                setTimeout(() => {
+                    document.getElementById('splashScreen').classList.add('hidden');
+                    verificarPrimeiroAcesso();
+                }, 200);
+
+            } catch (e) {
+                console.error(e);
+                document.getElementById('splashScreen').classList.add('hidden');
+                mostrarAvisoCatalogoVazio();
+                atualizarBotaoMusicaUI(musicaHabilitadaPeloUsuario);
+                verificarPrimeiroAcesso();
+            }
+        }
+
+        function organizarCategorias() {
+            categoriasMap = {};
+            listaFilmes.forEach(filme => {
+                const cat = filme.categoria !== "" ? filme.categoria : "Outros";
+                if (!categoriasMap[cat]) categoriasMap[cat] = [];
+                categoriasMap[cat].push(filme);
+            });
+
+            if (ordemAZ) {
+                for (const cat in categoriasMap) {
+                    categoriasMap[cat].sort((a, b) => a.titulo.localeCompare(b.titulo));
+                }
+            } else {
+                for (const cat in categoriasMap) {
+                    categoriasMap[cat].sort(() => Math.random() - 0.5);
+                }
+            }
+        }
+
+        function alternarOrdem() {
+            ordemAZ = !ordemAZ;
+            document.getElementById('btnSort').textContent = ordemAZ ? "Padrão" : "A-Z";
+            document.getElementById('btnSort').style.background = ordemAZ ? "var(--accent-soft)" : "var(--surface-color)";
+            document.getElementById('btnSort').style.color = ordemAZ ? "var(--accent)" : "var(--text-primary)";
+            organizarCategorias();
+            homeJaRenderizada = false;
+            atualizarTelaAtual();
+        }
+
+        function construirAbas() {
+            const tabsContainer = document.getElementById('filterTabs');
+            tabsContainer.innerHTML = `
+                <div class="tab-chip ${abaAtiva === 'Todos' ? 'active' : ''}" onclick="selecionarAba('Todos')">Todos</div>
+                <div class="tab-chip ${abaAtiva === 'Favoritos' ? 'active' : ''}" onclick="selecionarAba('Favoritos')">Favoritos (${favoritos.length})</div>
+                <div class="tab-chip ${abaAtiva === 'Recentes' ? 'active' : ''}" onclick="selecionarAba('Recentes')">Recentes (${assistidosLista.length})</div>
+            `;
+
+            for (const cat of Object.keys(categoriasMap)) {
+                let chip = document.createElement('div');
+                chip.className = `tab-chip ${abaAtiva === cat ? 'active' : ''}`;
+                chip.textContent = cat;
+                chip.onclick = () => selecionarAba(cat);
+                tabsContainer.appendChild(chip);
+            }
+        }
+
+        function selecionarAba(nomeAba) {
+            if (abaAtiva === 'Todos' && nomeAba !== 'Todos') {
+                scrollPosAnterior = window.scrollY;
+            }
+
+            abaAtiva = nomeAba;
+            document.getElementById('searchInput').value = '';
+            fecharHistoricoPesquisa();
+            construirAbas();
+            atualizarTelaAtual();
+
+            if (nomeAba === 'Todos') {
+                requestAnimationFrame(() => {
+                    window.scrollTo({ top: scrollPosAnterior, behavior: 'instant' });
+                });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'instant' });
+            }
+        }
+
+        function irParaTopoHome() {
+            scrollPosAnterior = 0;
+            selecionarAba('Todos');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function atualizarTelaAtual() {
+            if (listaFilmes.length === 0) {
+                mostrarAvisoCatalogoVazio();
+                return;
+            }
+
+            if (abaAtiva === 'Todos') {
+                mostrarView('viewHome');
+                if (!homeJaRenderizada) {
+                    renderizarHome();
+                } else {
+                    atualizarSecoesDinamicasHome();
+                }
+            } else if (abaAtiva === 'Favoritos') {
+                mostrarView('viewList');
+                let listaFavs = [...favoritos];
+                if (ordemAZ) listaFavs.sort((a, b) => a.titulo.localeCompare(b.titulo));
+                renderizarListaEspecifica("Favoritos", listaFavs, 'favoritos');
+            } else if (abaAtiva === 'Recentes') {
+                mostrarView('viewList');
+                let listaAst = [...assistidosLista];
+                if (ordemAZ) listaAst.sort((a, b) => a.titulo.localeCompare(b.titulo));
+                renderizarListaEspecifica("Recentes", listaAst, 'recentes');
+            } else {
+                mostrarView('viewList');
+                renderizarListaEspecifica(abaAtiva, categoriasMap[abaAtiva], null);
+            }
+        }
+
+        function mostrarView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+
+        function criarSvgCoracao() {
+            return `<svg viewBox="0 0 24 24" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+        }
+
+        function renderizarHome() {
+            const homeView = document.getElementById('viewHome');
+            homeView.innerHTML = '';
+
+            const billboard = document.createElement('div');
+            billboard.className = 'hero-billboard';
+            billboard.id = 'heroBillboard';
+
+            billboardSlides = [...listaFilmes].sort(() => 0.5 - Math.random()).slice(0, 5);
+            billboardSlides.forEach((filme, idx) => {
+                const isFav = favoritos.some(f => f.titulo === filme.titulo && f.url === filme.url);
+                const slide = document.createElement('div');
+                slide.className = `billboard-slide ${idx === 0 ? 'active' : ''}`;
+                slide.innerHTML = `
+                    <img class="billboard-bg" src="${normalizarUrlImagem(filme.capa, FALLBACK_BILLBOARD)}" referrerpolicy="no-referrer" onerror="this.onerror=null;this.src='${FALLBACK_BILLBOARD}'">
+                    <div class="billboard-vignette"></div>
+                    <div class="billboard-info">
+                        <div class="billboard-badge">Destaque &bull; ${filme.qualidade}</div>
+                        <div class="billboard-title">${filme.titulo}</div>
+                        <div class="billboard-meta">${filme.categoria}</div>
+                        <div class="billboard-actions">
+                            <button class="btn-billboard-play" onclick='abrirDetalhes(${JSON.stringify(filme).replace(/'/g, "&apos;")})'><span class="billboard-play-glyph">►</span> Assistir</button>
+                            <button class="btn-billboard-fav ${isFav ? 'is-fav' : ''}" aria-label="Favoritar" onclick='toggleFavoritoDireto(event, ${JSON.stringify(filme).replace(/'/g, "&apos;")}, this)'>${criarSvgCoracao()}</button>
+                        </div>
+                    </div>
+                `;
+                billboard.appendChild(slide);
+            });
+
+            const dotsContainer = document.createElement('div');
+            dotsContainer.className = 'billboard-dots';
+            billboardSlides.forEach((_, idx) => {
+                const dot = document.createElement('div');
+                dot.className = `b-dot ${idx === 0 ? 'active' : ''}`;
+                dot.onclick = () => mudarSlideBillboard(idx);
+                dotsContainer.appendChild(dot);
+            });
+            billboard.appendChild(dotsContainer);
+            homeView.appendChild(billboard);
+            iniciarRotacaoBillboard();
+
+            const innerContainer = document.createElement('div');
+            innerContainer.className = 'container';
+            innerContainer.id = 'homeCategoriesContainer';
+
+            const dynamicTopDiv = document.createElement('div');
+            dynamicTopDiv.id = 'homeDynamicTop';
+            innerContainer.appendChild(dynamicTopDiv);
+
+            const recSection = document.createElement('div');
+            recSection.className = 'category-section';
+            recSection.innerHTML = `<div class="category-header"><div class="category-title">Em Alta</div></div>`;
+            const recCarousel = document.createElement('div');
+            recCarousel.className = 'movies-carousel';
+            let recomendados = [...listaFilmes].sort(() => 0.5 - Math.random()).slice(0, 12);
+            recomendados.forEach(filme => { recCarousel.appendChild(criarCardClean(filme)); });
+            recSection.appendChild(recCarousel);
+            innerContainer.appendChild(recSection);
+
+            for (const [categoria, itens] of Object.entries(categoriasMap)) {
+                const sectionDiv = document.createElement('div');
+                sectionDiv.className = 'category-section';
+
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'category-header';
+                headerDiv.innerHTML = `<div class="category-title">${categoria}</div>`;
+
+                if (itens.length > 8) {
+                    const btnMore = document.createElement('button');
+                    btnMore.className = 'btn-see-more';
+                    btnMore.textContent = `Ver Mais (${itens.length})`;
+                    btnMore.onclick = () => selecionarAba(categoria);
+                    headerDiv.appendChild(btnMore);
+                }
+
+                const carouselDiv = document.createElement('div');
+                carouselDiv.className = 'movies-carousel';
+                itens.slice(0, 8).forEach(filme => { carouselDiv.appendChild(criarCardClean(filme)); });
+
+                if (itens.length > 8) {
+                    const seeMoreCard = document.createElement('div');
+                    seeMoreCard.className = 'see-more-card';
+                    seeMoreCard.innerHTML = `<div class="see-more-text">Ver Mais</div><div style="font-size:10px; color:var(--text-secondary)">(${itens.length})</div>`;
+                    seeMoreCard.onclick = () => selecionarAba(categoria);
+                    carouselDiv.appendChild(seeMoreCard);
+                }
+
+                sectionDiv.appendChild(headerDiv);
+                sectionDiv.appendChild(carouselDiv);
+                innerContainer.appendChild(sectionDiv);
+            }
+
+            homeView.appendChild(innerContainer);
+            homeJaRenderizada = true;
+            atualizarSecoesDinamicasHome();
+        }
+
+        function atualizarSecoesDinamicasHome() {
+            const dynamicTop = document.getElementById('homeDynamicTop');
+            if (!dynamicTop) return;
+            dynamicTop.innerHTML = '';
+
+            if (favoritos.length > 0) {
+                const favSection = document.createElement('div');
+                favSection.className = 'category-section';
+                favSection.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-title">Favoritos</div>
+                        <button class="btn-see-more" onclick="selecionarAba('Favoritos')">Ver Todos (${favoritos.length})</button>
+                    </div>
+                `;
+                const favCarousel = document.createElement('div');
+                favCarousel.className = 'movies-carousel';
+                favoritos.slice(0, 8).forEach(filme => {
+                    favCarousel.appendChild(criarCardClean(filme));
+                });
+                favSection.appendChild(favCarousel);
+                dynamicTop.appendChild(favSection);
+            }
+
+            if (assistidosLista.length > 0) {
+                const astSection = document.createElement('div');
+                astSection.className = 'category-section';
+                astSection.innerHTML = `
+                    <div class="category-header">
+                        <div class="category-title">Continuar a Ver</div>
+                        <button class="btn-see-more" onclick="selecionarAba('Recentes')">Ver Todos (${assistidosLista.length})</button>
+                    </div>
+                `;
+                const astCarousel = document.createElement('div');
+                astCarousel.className = 'movies-carousel';
+                assistidosLista.slice(0, 8).forEach(filme => {
+                    astCarousel.appendChild(criarCardClean(filme));
+                });
+                astSection.appendChild(astCarousel);
+                dynamicTop.appendChild(astSection);
+            }
+        }
+
+        function iniciarRotacaoBillboard() {
+            clearInterval(billboardTimer);
+            billboardTimer = setInterval(() => {
+                let proximo = (billboardIndex + 1) % billboardSlides.length;
+                mudarSlideBillboard(proximo);
+            }, 6000);
+        }
+
+        function mudarSlideBillboard(idx) {
+            billboardIndex = idx;
+            const slides = document.querySelectorAll('.billboard-slide');
+            const dots = document.querySelectorAll('.b-dot');
+            slides.forEach((s, i) => s.classList.toggle('active', i === idx));
+            dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+            iniciarRotacaoBillboard();
+        }
+
+        function toggleFavoritoDireto(event, filme, btnElem) {
+            event.stopPropagation();
+            const index = favoritos.findIndex(f => f.titulo === filme.titulo && f.url === filme.url);
+            if (index > -1) {
+                favoritos.splice(index, 1);
+                btnElem.classList.remove('is-fav');
+                mostrarToast("Removido dos Favoritos");
+            } else {
+                favoritos.push(filme);
+                btnElem.classList.add('is-fav');
+                mostrarToast("Adicionado aos Favoritos");
+            }
+            localStorage.setItem('freetv_favs', JSON.stringify(favoritos));
+            construirAbas();
+            atualizarSecoesDinamicasHome();
+        }
+
+        function abrirFilmeAleatorio() {
+            if (listaFilmes.length === 0) return;
+            const sorteado = listaFilmes[Math.floor(Math.random() * listaFilmes.length)];
+            abrirDetalhes(sorteado);
+        }
+
+        function mostrarAvisoCatalogoVazio() {
+            const homeView = document.getElementById('viewHome');
+            homeView.innerHTML = `
+                <div class="empty-catalog-box">
+                    <div class="empty-catalog-icon">
+                        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                            <line x1="7" y1="2" x2="7" y2="22"></line>
+                            <line x1="17" y1="2" x2="17" y2="22"></line>
+                            <line x1="2" y1="12" x2="22" y2="12"></line>
+                        </svg>
+                    </div>
+                    <div class="empty-catalog-title">Catálogo em Expansão</div>
+                    <div class="empty-catalog-text">O catálogo de filmes está a ser atualizado. Novos títulos serão adicionados em breve.</div>
+                </div>
+            `;
+        }
+
+        function renderizarListaEspecifica(titulo, itens, tipoLista) {
+            const listView = document.getElementById('viewList');
+            listView.innerHTML = '';
+
+            const headerBar = document.createElement('div');
+            headerBar.className = 'list-header-bar';
+            headerBar.innerHTML = `
+                <div class="nav-back-bar">
+                    <button class="btn-back" onclick="selecionarAba('Todos')">Voltar</button>
+                    <h2 style="font-size:17px; font-weight:800;">${titulo} (${itens.length})</h2>
+                </div>
+            `;
+
+            if (tipoLista === 'recentes' && itens.length > 0) {
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'btn-clear-history';
+                clearBtn.textContent = 'Limpar Recentes';
+                clearBtn.onclick = limparHistoricoRecentes;
+                headerBar.appendChild(clearBtn);
+            } else if (tipoLista === 'favoritos' && itens.length > 0) {
+                const clearBtn = document.createElement('button');
+                clearBtn.className = 'btn-clear-history';
+                clearBtn.textContent = 'Limpar Favoritos';
+                clearBtn.onclick = limparHistoricoFavoritos;
+                headerBar.appendChild(clearBtn);
+            }
+
+            listView.appendChild(headerBar);
+
+            const gridWrapper = document.createElement('div');
+            gridWrapper.className = 'movies-grid-wrapper';
+
+            let itensExibicao = itens;
+            if (itens.length > 120) {
+                itensExibicao = itens.slice(0, 120);
+            }
+
+            const gridDiv = document.createElement('div');
+            gridDiv.className = 'movies-grid-clean';
+
+            if (!itens || itens.length === 0) {
+                gridWrapper.innerHTML = '<div class="status-message">Nenhum item encontrado nesta lista.</div>';
+                listView.appendChild(gridWrapper);
+                return;
+            }
+
+            itensExibicao.forEach(filme => { gridDiv.appendChild(criarCardClean(filme)); });
+            gridWrapper.appendChild(gridDiv);
+            listView.appendChild(gridWrapper);
+        }
+
+        function criarCardClean(filme) {
+            const card = document.createElement('div');
+            card.className = 'movie-card-clean';
+
+            const key = filme.titulo + filme.url;
+            const progressoSeg = historicoProgresso[key] || 0;
+            const jaAssistido = assistidosLista.some(f => f.titulo === filme.titulo && f.url === filme.url);
+
+            let indicadorHtml = jaAssistido ? `<div class="watched-dot" title="Visto"></div>` : '';
+            let barraProgressoHtml = '';
+
+            if (progressoSeg > 5) {
+                let pct = Math.min(100, (progressoSeg / 7200) * 100);
+                barraProgressoHtml = `
+                    <div class="card-progress-bar">
+                        <div class="card-progress-fill" style="width: ${pct}%"></div>
+                    </div>
+                `;
+            }
+
+            const capaUrl = normalizarUrlImagem(filme.capa, FALLBACK_POSTER);
+
+            card.innerHTML = `
+                <div class="poster-clean-wrapper">
+                    <div class="quality-badge-clean">${filme.qualidade}</div>
+                    ${indicadorHtml}
+                    <img class="movie-clean-poster" alt="${filme.titulo}" referrerpolicy="no-referrer" loading="eager">
+                    ${barraProgressoHtml}
+                </div>
+            `;
+
+            const imgElem = card.querySelector('.movie-clean-poster');
+
+            if (globalImageCache.has(capaUrl)) {
+                imgElem.src = globalImageCache.get(capaUrl);
+            } else {
+                const tempImg = new Image();
+                tempImg.referrerPolicy = "no-referrer";
+                tempImg.src = capaUrl;
+                tempImg.onload = () => {
+                    globalImageCache.set(capaUrl, capaUrl);
+                    imgElem.src = capaUrl;
+                };
+                tempImg.onerror = () => {
+                    imgElem.src = FALLBACK_POSTER;
+                };
+            }
+
+            card.onclick = () => abrirDetalhes(filme);
+            return card;
+        }
+
+        function limparHistoricoRecentes() {
+            assistidosLista = [];
+            historicoProgresso = {};
+            localStorage.removeItem('freetv_watched_list');
+            localStorage.removeItem('freetv_progress');
+            atualizarTelaAtual();
+            construirAbas();
+            atualizarSecoesDinamicasHome();
+        }
+
+        function limparHistoricoFavoritos() {
+            favoritos = [];
+            localStorage.removeItem('freetv_favs');
+            atualizarTelaAtual();
+            construirAbas();
+            atualizarSecoesDinamicasHome();
+        }
+
+        function toggleFavoritoAtual() {
+            if (!filmeSelecionado) return;
+            const index = favoritos.findIndex(f => f.titulo === filmeSelecionado.titulo && f.url === filmeSelecionado.url);
+            const btnFav = document.getElementById('btnFav');
+
+            if (index > -1) {
+                favoritos.splice(index, 1);
+                btnFav.textContent = "Adicionar aos Favoritos";
+            } else {
+                favoritos.push(filmeSelecionado);
+                btnFav.textContent = "Remover dos Favoritos";
+            }
+
+            localStorage.setItem('freetv_favs', JSON.stringify(favoritos));
+            construirAbas();
+            atualizarSecoesDinamicasHome();
+        }
+
+        function mostrarToast(msg) {
+            const toast = document.getElementById('toastNotification');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 2500);
+        }
+
+        function copiarLinkSite() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                mostrarToast("Ligação copiada para a área de transferência");
+            }).catch(err => console.error(err));
+        }
+
+        function registrarRecenteAtual() {
+            if (!filmeSelecionado) return;
+            const jaExisteIndex = assistidosLista.findIndex(f => f.titulo === filmeSelecionado.titulo && f.url === filmeSelecionado.url);
+            if (jaExisteIndex > -1) {
+                assistidosLista.splice(jaExisteIndex, 1);
+            }
+            assistidosLista.unshift(filmeSelecionado);
+            localStorage.setItem('freetv_watched_list', JSON.stringify(assistidosLista));
+        }
+
+        function abrirDetalhes(filme) {
+            filmeSelecionado = filme;
+            document.getElementById('detTitulo').textContent = filme.titulo;
+            document.getElementById('detCategoria').textContent = filme.categoria || 'Streaming';
+            document.getElementById('detQualidade').textContent = filme.qualidade || 'HD';
+
+            const detCapa = document.getElementById('detCapa');
+            detCapa.onerror = () => {
+                detCapa.onerror = null;
+                detCapa.src = FALLBACK_POSTER;
+            };
+            detCapa.src = normalizarUrlImagem(filme.capa, FALLBACK_POSTER);
+
+            const key = filme.titulo + filme.url;
+            const progressoSalvo = historicoProgresso[key] || 0;
+            const isFav = favoritos.some(f => f.titulo === filme.titulo && f.url === filme.url);
+            const noticeEl = document.getElementById('detPlayerNotice');
+            const actionsBox = document.getElementById('detActionsBox');
+
+            noticeEl.textContent = "Pronto para assistir no catálogo com acesso rápido aos teus favoritos.";
+
+            if (isIos) {
+                actionsBox.innerHTML = `
+                    <a class="btn-main-play" href="${montarLinkVlcIos(filme.url)}" onclick="registrarRecenteAtual(); pausarMusicaParaFilme();">► Abrir no VLC</a>
+                    <button id="btnFav" class="btn-favorite-toggle" onclick="toggleFavoritoAtual()">${isFav ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}</button>
+                    <button class="btn-close-detail" onclick="fecharDetalhes()">Fechar</button>
+                `;
+            } else {
+                const rotuloPlay = progressoSalvo > 10
+                    ? `► Continuar de (${Math.floor(progressoSalvo / 60)} min)`
+                    : "► Assistir no Player";
+                actionsBox.innerHTML = `
+                    <button class="btn-main-play" onclick="iniciarPlayerNormal()">${rotuloPlay}</button>
+                    <button id="btnFav" class="btn-favorite-toggle" onclick="toggleFavoritoAtual()">${isFav ? "Remover dos Favoritos" : "Adicionar aos Favoritos"}</button>
+                    <button class="btn-close-detail" onclick="fecharDetalhes()">Fechar</button>
+                `;
+            }
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function fecharDetalhes() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function fecharDetalhesFora(event) {
+            if (event.target.id === 'detailModal') fecharDetalhes();
+        }
+
+        function iniciarPlayerNormal() {
+            if (!filmeSelecionado) return;
+            fecharDetalhes();
+            pausarMusicaParaFilme();
+
+            document.getElementById('playerTopTag').textContent = `${filmeSelecionado.qualidade || 'HD'} • FREETV`;
+            document.getElementById('playerTopTitle').textContent = filmeSelecionado.titulo;
+
+            const overlay = document.getElementById('videoPlayerOverlay');
+            overlay.classList.add('active');
+
+            const key = filmeSelecionado.titulo + filmeSelecionado.url;
+            const tempoSalvo = historicoProgresso[key] || 0;
+
+            videoElem.src = filmeSelecionado.url;
+            videoElem.load();
+
+            videoElem.onloadedmetadata = () => {
+                if (tempoSalvo > 5 && videoElem.duration > tempoSalvo) {
+                    videoElem.currentTime = tempoSalvo;
+                }
+            };
+
+            videoElem.play().catch(() => {});
+            iniciarGravacaoProgresso();
+        }
+
+        function iniciarGravacaoProgresso() {
+            clearInterval(salvarProgressoInterval);
+            salvarProgressoInterval = setInterval(() => {
+                if (!videoElem.paused && filmeSelecionado && videoElem.currentTime > 0) {
+                    const key = filmeSelecionado.titulo + filmeSelecionado.url;
+                    historicoProgresso[key] = videoElem.currentTime;
+                    localStorage.setItem('freetv_progress', JSON.stringify(historicoProgresso));
+
+                    if (videoElem.currentTime > 15) {
+                        const jaExisteIndex = assistidosLista.findIndex(f => f.titulo === filmeSelecionado.titulo && f.url === filmeSelecionado.url);
+                        if (jaExisteIndex > -1) {
+                            assistidosLista.splice(jaExisteIndex, 1);
+                        }
+                        assistidosLista.unshift(filmeSelecionado);
+                        localStorage.setItem('freetv_watched_list', JSON.stringify(assistidosLista));
+                    }
+                }
+            }, 3000);
+        }
+
+        function fecharPlayerNormal() {
+            clearInterval(salvarProgressoInterval);
+            if (filmeSelecionado && videoElem.currentTime > 0) {
+                const key = filmeSelecionado.titulo + filmeSelecionado.url;
+                historicoProgresso[key] = videoElem.currentTime;
+                localStorage.setItem('freetv_progress', JSON.stringify(historicoProgresso));
+            }
+            videoElem.pause();
+            videoElem.removeAttribute('src');
+            videoElem.load();
+            document.getElementById('videoPlayerOverlay').classList.remove('active');
+            construirAbas();
+            atualizarSecoesDinamicasHome();
+            retomarMusicaSeAtiva();
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                pararLoopMusica();
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend().catch(() => {});
+                }
+            } else {
+                const playerAberto = document.getElementById('videoPlayerOverlay').classList.contains('active');
+                if (!playerAberto && !pausadoPorVideo && musicaHabilitadaPeloUsuario) {
+                    iniciarLoopMusica();
+                }
+            }
+        });
+
+        function mostrarHistoricoPesquisa() {
+            if (historicoPesquisas.length === 0) return;
+            const dropdown = document.getElementById('searchHistoryDropdown');
+            const list = document.getElementById('searchHistoryList');
+            list.innerHTML = '';
+
+            historicoPesquisas.forEach(termo => {
+                const tag = document.createElement('div');
+                tag.className = 'search-tag';
+                tag.textContent = termo;
+                tag.onclick = () => {
+                    document.getElementById('searchInput').value = termo;
+                    fecharHistoricoPesquisa();
+                    executarPesquisa(termo.toLowerCase());
+                };
+                list.appendChild(tag);
+            });
+
+            dropdown.classList.add('active');
+        }
+
+        function fecharHistoricoPesquisa() {
+            document.getElementById('searchHistoryDropdown').classList.remove('active');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-wrapper')) {
+                fecharHistoricoPesquisa();
+            }
+        });
+
+        function salvarTermoPesquisa(termoOriginal) {
+            const limpo = termoOriginal.trim();
+            if (limpo.length < 2) return;
+            historicoPesquisas = historicoPesquisas.filter(t => t.toLowerCase() !== limpo.toLowerCase());
+            historicoPesquisas.unshift(limpo);
+            if (historicoPesquisas.length > 8) historicoPesquisas.pop();
+            localStorage.setItem('freetv_search_history', JSON.stringify(historicoPesquisas));
+        }
+
+        function limparHistoricoPesquisa() {
+            historicoPesquisas = [];
+            localStorage.removeItem('freetv_search_history');
+            fecharHistoricoPesquisa();
+            mostrarToast("Histórico de pesquisa limpo");
+        }
+
+        function dispararBuscaComDelay() {
+            clearTimeout(tempoBusca);
+            const rawVal = document.getElementById('searchInput').value;
+            const termo = rawVal.toLowerCase().trim();
+            if (!termo) {
+                selecionarAba('Todos');
+                return;
+            }
+            tempoBusca = setTimeout(() => {
+                salvarTermoPesquisa(rawVal);
+                fecharHistoricoPesquisa();
+                executarPesquisa(termo);
+            }, 650);
+        }
+
+        function executarPesquisa(termo) {
+            if (abaAtiva === 'Todos') scrollPosAnterior = window.scrollY;
+            mostrarView('viewList');
+            let filtrados = listaFilmes.filter(filme => filme.titulo.toLowerCase().includes(termo));
+            if (ordemAZ) filtrados.sort((a, b) => a.titulo.localeCompare(b.titulo));
+            renderizarListaEspecifica(`Pesquisa: "${termo}"`, filtrados, null);
+        }
+
+        carregarFilmes();
+    </script>
+</body>
+</html>
