@@ -334,6 +334,82 @@
             display: flex;
         }
 
+        /* Banner Surpresa da IA sobre a Quantidade de Filmes */
+        .ai-surprise-banner {
+            background: linear-gradient(125deg, rgba(255, 183, 3, 0.16), rgba(124, 58, 237, 0.18));
+            border: 1px solid rgba(255, 183, 3, 0.36);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+            animation: surprisePop 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes surprisePop {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .ai-surprise-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .ai-surprise-badge {
+            background: var(--accent);
+            color: var(--accent-ink);
+            font-size: 10px;
+            font-weight: 900;
+            letter-spacing: 0.7px;
+            text-transform: uppercase;
+            padding: 5px 9px;
+            border-radius: 9px;
+            flex-shrink: 0;
+        }
+        .ai-surprise-text {
+            font-size: 13px;
+            line-height: 1.4;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .ai-surprise-count {
+            color: var(--accent);
+            font-weight: 900;
+            font-size: 15px;
+        }
+        .ai-surprise-btn {
+            background: var(--surface-color);
+            border: 1px solid rgba(255, 183, 3, 0.45);
+            color: var(--accent);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .ai-surprise-btn:hover {
+            background: var(--surface-hover);
+        }
+        .ai-surprise-btn:active {
+            transform: scale(0.95);
+        }
+        @media (max-width: 540px) {
+            .ai-surprise-banner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .ai-surprise-btn {
+                align-self: flex-end;
+            }
+        }
+
         /* Billboard Cinematográfico */
         .hero-billboard {
             position: relative;
@@ -1309,6 +1385,7 @@
         let salvarProgressoInterval = null;
         let scrollPosAnterior = 0;
         let homeJaRenderizada = false;
+        let indiceFraseSurpresa = 0;
 
         let billboardSlides = [];
         let billboardIndex = 0;
@@ -1316,6 +1393,95 @@
 
         const videoElem = document.getElementById('normalVideoElem');
         const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        function escaparHtmlAttr(obj) {
+            return JSON.stringify(obj)
+                .replace(/&/g, '&amp;')
+                .replace(/'/g, '&#39;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function gerarFraseSurpresaIA(total, totalCategorias) {
+            const palavraFilme = total === 1 ? 'filme' : 'filmes';
+            const palavraCat = totalCategorias === 1 ? 'categoria' : 'categorias';
+
+            const frases = [
+                `Opa, pera aí! Eu contei aqui e tem <span class="ai-surprise-count">${total} ${palavraFilme}</span> escondidos nesse JSON em <span class="ai-surprise-count">${totalCategorias} ${palavraCat}</span>! Não achava que era tanto assim!`,
+                `Sério isso?! Eu acabei de vasculhar o catálogo e encontrei <span class="ai-surprise-count">${total} ${palavraFilme}</span> prontos para rodar — dá para maratonar sem ver o tempo passar!`,
+                `Espera um segundo que eu fiquei impressionado: são <span class="ai-surprise-count">${total} ${palavraFilme}</span> carregados agora mesmo! Já escolheu qual vai ser o primeiro?`
+            ];
+
+            const fraseEscolhida = frases[indiceFraseSurpresa % frases.length];
+            indiceFraseSurpresa++;
+            return fraseEscolhida;
+        }
+
+        function animarContadorSurpresa(el) {
+            if (!el) return;
+            const alvo = parseInt(el.dataset.target || '0', 10);
+            if (!alvo || alvo <= 0) return;
+
+            const duracao = 700;
+            const inicio = performance.now();
+
+            function passo(agora) {
+                const progresso = Math.min(1, (agora - inicio) / duracao);
+                const eased = 1 - Math.pow(1 - progresso, 3);
+                const atual = Math.max(1, Math.round(eased * alvo));
+                const sufixo = el.dataset.suffix || '';
+                el.textContent = `${atual}${sufixo}`;
+                if (progresso < 1) {
+                    requestAnimationFrame(passo);
+                }
+            }
+            requestAnimationFrame(passo);
+        }
+
+        function criarBannerSurpresaIA() {
+            const total = listaFilmes.length;
+            const totalCategorias = Object.keys(categoriasMap).length;
+            const banner = document.createElement('div');
+            banner.className = 'ai-surprise-banner';
+            banner.id = 'aiSurpriseBanner';
+
+            const textoHtml = gerarFraseSurpresaIA(total, totalCategorias);
+
+            banner.innerHTML = `
+                <div class="ai-surprise-left">
+                    <span class="ai-surprise-badge">AI • Uau!</span>
+                    <div class="ai-surprise-text" id="aiSurpriseText">${textoHtml}</div>
+                </div>
+                <button class="ai-surprise-btn" onclick="trocarMensagemSurpresaIA()">Outra surpresa</button>
+            `;
+
+            const countSpan = banner.querySelector('.ai-surprise-count');
+            if (countSpan) {
+                const textoCompleto = countSpan.textContent.trim();
+                const partes = textoCompleto.split(' ');
+                countSpan.dataset.target = total;
+                countSpan.dataset.suffix = partes.length > 1 ? ` ${partes.slice(1).join(' ')}` : '';
+                animarContadorSurpresa(countSpan);
+            }
+
+            return banner;
+        }
+
+        function trocarMensagemSurpresaIA() {
+            const textEl = document.getElementById('aiSurpriseText');
+            if (!textEl || listaFilmes.length === 0) return;
+            const total = listaFilmes.length;
+            const totalCategorias = Object.keys(categoriasMap).length;
+            textEl.innerHTML = gerarFraseSurpresaIA(total, totalCategorias);
+
+            const countSpan = textEl.querySelector('.ai-surprise-count');
+            if (countSpan) {
+                const textoCompleto = countSpan.textContent.trim();
+                const partes = textoCompleto.split(' ');
+                countSpan.dataset.target = total;
+                countSpan.dataset.suffix = partes.length > 1 ? ` ${partes.slice(1).join(' ')}` : '';
+                animarContadorSurpresa(countSpan);
+            }
+        }
 
         function normalizarUrlImagem(url, fallback = FALLBACK_POSTER) {
             if (!url || typeof url !== 'string') return fallback;
@@ -1356,7 +1522,8 @@
 
         async function carregarFilmes() {
             try {
-                const response = await fetch('filmes.json');
+                const response = await fetch('filmes.json', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Falha ao carregar filmes.json');
                 const dadosJson = await response.json();
 
                 let bruto = [];
@@ -1368,8 +1535,8 @@
 
                 listaFilmes = bruto.map(item => {
                     let categoria = item.group || (item.attributes && item.attributes['group-title']) || "Outros";
-                    let capa = (item.attributes && item.attributes['tvg-logo']) || "";
-                    let nome = item.name || "Sem Título";
+                    let capa = (item.attributes && item.attributes['tvg-logo']) || item.capa || item.logo || "";
+                    let nome = item.name || item.titulo || "Sem Título";
 
                     let qualidade = "HD";
                     let nomeLower = nome.toLowerCase();
@@ -1383,7 +1550,7 @@
 
                     return {
                         titulo: nome,
-                        categoria: categoria.trim(),
+                        categoria: String(categoria).trim(),
                         capa: normalizarUrlImagem(capa, FALLBACK_POSTER),
                         url: item.url || "",
                         qualidade: qualidade
@@ -1528,6 +1695,7 @@
             billboardSlides = [...listaFilmes].sort(() => 0.5 - Math.random()).slice(0, 5);
             billboardSlides.forEach((filme, idx) => {
                 const isFav = favoritos.some(f => f.titulo === filme.titulo && f.url === filme.url);
+                const filmeEscapado = escaparHtmlAttr(filme);
                 const slide = document.createElement('div');
                 slide.className = `billboard-slide ${idx === 0 ? 'active' : ''}`;
                 slide.innerHTML = `
@@ -1538,8 +1706,8 @@
                         <div class="billboard-title">${filme.titulo}</div>
                         <div class="billboard-meta">${filme.categoria}</div>
                         <div class="billboard-actions">
-                            <button class="btn-billboard-play" onclick='abrirDetalhes(${JSON.stringify(filme).replace(/'/g, "&apos;")})'><span class="billboard-play-glyph">►</span> Assistir</button>
-                            <button class="btn-billboard-fav ${isFav ? 'is-fav' : ''}" aria-label="Favoritar" onclick='toggleFavoritoDireto(event, ${JSON.stringify(filme).replace(/'/g, "&apos;")}, this)'>${criarSvgCoracao()}</button>
+                            <button class="btn-billboard-play" onclick='abrirDetalhes(JSON.parse(this.dataset.filme))' data-filme='${filmeEscapado}'><span class="billboard-play-glyph">►</span> Assistir</button>
+                            <button class="btn-billboard-fav ${isFav ? 'is-fav' : ''}" aria-label="Favoritar" onclick='toggleFavoritoDireto(event, JSON.parse(this.dataset.filme), this)' data-filme='${filmeEscapado}'>${criarSvgCoracao()}</button>
                         </div>
                     </div>
                 `;
@@ -1561,6 +1729,8 @@
             const innerContainer = document.createElement('div');
             innerContainer.className = 'container';
             innerContainer.id = 'homeCategoriesContainer';
+
+            innerContainer.appendChild(criarBannerSurpresaIA());
 
             const dynamicTopDiv = document.createElement('div');
             dynamicTopDiv.id = 'homeDynamicTop';
@@ -1658,6 +1828,7 @@
 
         function iniciarRotacaoBillboard() {
             clearInterval(billboardTimer);
+            if (!billboardSlides || billboardSlides.length <= 1) return;
             billboardTimer = setInterval(() => {
                 let proximo = (billboardIndex + 1) % billboardSlides.length;
                 mudarSlideBillboard(proximo);
